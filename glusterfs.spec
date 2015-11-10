@@ -164,7 +164,7 @@
 Summary:          Cluster File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.5
+Version:          3.7.6
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -1257,8 +1257,11 @@ fi
 
 
 %changelog
+* Tue Nov 10 2015  Niels de Vos <ndevos@redhat.com> - 3.7.6-1
+- GlusterFS 3.7.6 GA
+
 * Wed Oct 14 2015  Niels de Vos <ndevos@redhat.com> - 3.7.5-1
-- GlusterFS 3.7.4 GA
+- GlusterFS 3.7.5 GA
 
 * Tue Sep 1 2015  Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.7.4-2
 - GlusterFS 3.7.4 cpio mkdir /var/lib/glusterd/hooks/1/delete/post error
