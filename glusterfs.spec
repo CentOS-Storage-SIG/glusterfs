@@ -149,7 +149,7 @@
 Summary:          Cluster File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.6.6
+Version:          3.6.8
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -1057,6 +1057,9 @@ fi
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
 
 %changelog
+* Wed Jan 06 2016 Niels de Vos <ndevos@redhat.com> 3.6.8-1
+- GlusterFS 3.6.8 GA
+
 * Tue Sep 22 2015  Kaleb S. KEITHLEY <kkeithle[at]redhat.com> 3.6.6-1
 - GlusterFS 3.6.6 GA
 
