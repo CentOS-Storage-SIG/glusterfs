@@ -78,11 +78,15 @@
 %endif
 
 ##-----------------------------------------------------------------------------
-## All %global definitions should be placed here and keep them sorted
+## All %%global definitions should be placed here and keep them sorted
 ##
 
 %if ( 0%{?fedora} && 0%{?fedora} > 16 ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
 %global _with_systemd true
+%endif
+
+%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 7 )
+%global _with_firewalld --enable-firewalld
 %endif
 
 %if 0%{?_tmpfilesdir:1}
@@ -164,7 +168,7 @@
 Summary:          Cluster File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.6
+Version:          3.7.7
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -200,7 +204,7 @@ BuildRequires:    python-simplejson
 %endif
 %endif
 
-Requires:         %{name}-libs = %{version}-%{release}
+Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
 BuildRequires:    bison flex
 BuildRequires:    gcc make automake libtool
 BuildRequires:    ncurses-devel readline-devel
@@ -233,6 +237,10 @@ BuildRequires:    glib2-devel
 BuildRequires:    libattr-devel
 %endif
 
+%if (0%{?_with_firewalld:1})
+BuildRequires:    firewalld
+%endif
+
 Obsoletes:        hekafs
 Obsoletes:        %{name}-common < %{version}-%{release}
 Obsoletes:        %{name}-core < %{version}-%{release}
@@ -259,8 +267,8 @@ and client framework.
 %package api
 Summary:          GlusterFS api library
 Group:            System Environment/Daemons
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-client-xlators = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-client-xlators%{?_isa} = %{version}-%{release}
 
 %description api
 GlusterFS is a distributed file-system capable of scaling to several
@@ -276,8 +284,8 @@ This package provides the glusterfs libgfapi library.
 %package api-devel
 Summary:          Development Libraries
 Group:            Development/Libraries
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-devel = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-devel%{?_isa} = %{version}-%{release}
 Requires:         libacl-devel
 
 %description api-devel
@@ -294,7 +302,7 @@ This package provides the api include files.
 %package cli
 Summary:          GlusterFS CLI
 Group:            Applications/File
-Requires:         %{name}-libs = %{version}-%{release}
+Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description cli
 GlusterFS is a distributed file-system capable of scaling to several
@@ -325,9 +333,9 @@ This package provides the translators needed on any GlusterFS client.
 %package devel
 Summary:          Development Libraries
 Group:            Development/Libraries
-Requires:         %{name} = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
 # Needed for the Glupy examples to work
-Requires:         %{name}-extra-xlators = %{version}-%{release}
+Requires:         %{name}-extra-xlators%{?_isa} = %{version}-%{release}
 
 %description devel
 GlusterFS is a distributed file-system capable of scaling to several
@@ -367,8 +375,8 @@ Group:            Applications/File
 BuildRequires:    fuse-devel
 Requires:         attr
 
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-client-xlators = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-client-xlators%{?_isa} = %{version}-%{release}
 
 Obsoletes:        %{name}-client < %{version}-%{release}
 Provides:         %{name}-client = %{version}-%{release}
@@ -382,16 +390,16 @@ terms of features and extensibility.  It borrows a powerful concept
 called Translators from GNU Hurd kernel. Much of the code in GlusterFS
 is in user space and easily manageable.
 
-This package provides support to FUSE based clients and includes the
-glusterfsd and glusterfs binaries.
+This package provides support to FUSE based clients and inlcudes the
+glusterfs(d) binary.
 
 %package ganesha
 Summary:          NFS-Ganesha configuration
 Group:            Applications/File
 
-Requires:         %{name}-server = %{version}-%{release}
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
 Requires:         nfs-ganesha-gluster
-Requires:         pcs
+Requires:         pcs, /usr/bin/dbus-send
 
 %description ganesha
 GlusterFS is a distributed file-system capable of scaling to several
@@ -409,8 +417,8 @@ NFS-Ganesha as the NFS server using GlusterFS
 %package geo-replication
 Summary:          GlusterFS Geo-replication
 Group:            Applications/File
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-server = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
 Requires:         python python-ctypes
 Requires:         rsync
 
@@ -478,7 +486,7 @@ Summary:          GlusterFS rdma support for ib-verbs
 Group:            Applications/File
 BuildRequires:    libibverbs-devel
 BuildRequires:    librdmacm-devel >= 1.0.15
-Requires:         %{name} = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
 
 %description rdma
 GlusterFS is a distributed file-system capable of scaling to several
@@ -496,9 +504,9 @@ This package provides support to ib-verbs library.
 %package regression-tests
 Summary:          Development Tools
 Group:            Development/Tools
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-fuse = %{version}-%{release}
-Requires:         %{name}-server = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-fuse%{?_isa} = %{version}-%{release}
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
 ## thin provisioning support
 Requires:         lvm2 >= 2.02.89
 Requires:         perl(App::Prove) perl(Test::Harness) gcc util-linux-ng
@@ -525,7 +533,7 @@ Group:            System Environment/Base
 Group:            Productivity/Clustering/HA
 %endif
 # for glusterd
-Requires:         %{name}-server
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
 # depending on the distribution, we need pacemaker or resource-agents
 Requires:         %{_prefix}/lib/ocf/resource.d
 
@@ -546,15 +554,16 @@ like Pacemaker.
 %package server
 Summary:          Clustered file-system server
 Group:            System Environment/Daemons
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-libs = %{version}-%{release}
-Requires:         %{name}-cli = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-cli%{?_isa} = %{version}-%{release}
+Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
 # some daemons (like quota) use a fuse-mount, glusterfsd is part of -fuse
-Requires:         %{name}-fuse = %{version}-%{release}
+Requires:         %{name}-fuse%{?_isa} = %{version}-%{release}
 # self-heal daemon, rebalance, nfs-server etc. are actually clients
-Requires:         %{name}-client-xlators = %{version}-%{release}
+Requires:         %{name}-api%{?_isa} = %{version}-%{release}
+Requires:         %{name}-client-xlators%{?_isa} = %{version}-%{release}
 # psmisc for killall, lvm2 for snapshot, and nfs-utils and
-# and rpcbind/portmap for gnfs server
+# rpcbind/portmap for gnfs server
 Requires:         psmisc
 Requires:         lvm2
 Requires:         nfs-utils
@@ -608,6 +617,7 @@ This package provides the glusterfs server daemon.
         %{?_without_epoll} \
         %{?_without_fusermount} \
         %{?_without_georeplication} \
+        %{?_with_firewalld} \
         %{?_without_ocf} \
         %{?_without_qemu_block} \
         %{?_without_rdma} \
@@ -892,6 +902,15 @@ if [ -e /etc/ld.so.conf.d/glusterfs.conf ]; then
     rm -f /etc/ld.so.conf.d/glusterfs.conf
     /sbin/ldconfig
 fi
+
+%if (0%{?_with_firewalld:1})
+#reload service files if firewalld running
+if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
+  #firewalld-filesystem is not available for rhel7, so command used for reload.
+  firewall-cmd  --reload
+fi
+%endif
+
 pidof -c -o %PPID -x glusterd &> /dev/null
 if [ $? -eq 0 ]; then
     kill -9 `pgrep -f gsyncd.py` &> /dev/null
@@ -948,6 +967,15 @@ fi
 
 %postun api
 /sbin/ldconfig
+
+%postun server
+%if (0%{?_with_firewalld:1})
+#reload service files if firewalld running
+if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
+    firewall-cmd  --reload
+fi
+%endif
+
 
 %postun libs
 /sbin/ldconfig
@@ -1255,8 +1283,15 @@ fi
 %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.py
 %{_libexecdir}/glusterfs/S57glusterfind-delete-post.*
 
+%if ( 0%{?_with_firewalld:1} )
+/usr/lib/firewalld/services/glusterfs.xml
+%endif
 
 %changelog
+* Mon Feb 1 2016  Niels de Vos <ndevos@redhat.com> - 3.7.7-1
+- GlusterFS 3.7.6 GA
+- sync _isa and firewalld sections from upstream 
+
 * Tue Nov 10 2015  Niels de Vos <ndevos@redhat.com> - 3.7.6-1
 - GlusterFS 3.7.6 GA
 
