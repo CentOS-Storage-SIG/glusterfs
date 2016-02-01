@@ -169,7 +169,7 @@ Summary:          Cluster File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.7.7
-Release:          1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          2%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -533,7 +533,7 @@ Group:            System Environment/Base
 Group:            Productivity/Clustering/HA
 %endif
 # for glusterd
-Requires:         %{name}-server%{?_isa} = %{version}-%{release}
+Requires:         %{name}-server = %{version}-%{release}
 # depending on the distribution, we need pacemaker or resource-agents
 Requires:         %{_prefix}/lib/ocf/resource.d
 
@@ -1288,9 +1288,12 @@ fi
 %endif
 
 %changelog
+* Mon Feb 1 2016  Niels de Vos <ndevos@redhat.com> - 3.7.7-2
+- noarch resource-agents may not depend on arch specific packages
+
 * Mon Feb 1 2016  Niels de Vos <ndevos@redhat.com> - 3.7.7-1
-- GlusterFS 3.7.6 GA
-- sync _isa and firewalld sections from upstream 
+- GlusterFS 3.7.7 GA
+- sync _isa and firewalld sections from upstream
 
 * Tue Nov 10 2015  Niels de Vos <ndevos@redhat.com> - 3.7.6-1
 - GlusterFS 3.7.6 GA
