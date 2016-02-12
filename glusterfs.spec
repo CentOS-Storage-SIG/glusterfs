@@ -165,11 +165,11 @@
 ##-----------------------------------------------------------------------------
 ## All package definitions should be placed here and keep them sorted
 ##
-Summary:          Cluster File System
+Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.7
-Release:          2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.7.8
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -198,9 +198,10 @@ BuildRequires:    python-simplejson
 %endif
 %if ( 0%{_for_fedora_koji_builds} )
 %if ( 0%{?_with_systemd:1} )
-%global glusterfsd_service %{S:%{SOURCE7}}
+BuildRequires:    systemd-units
+%global glusterfsd_service S:%{SOURCE7}}
 %else
-%global glusterfsd_service %{S:%{SOURCE8}}
+%global glusterfsd_service {S:%{SOURCE8}}
 %endif
 %endif
 
@@ -269,6 +270,8 @@ Summary:          GlusterFS api library
 Group:            System Environment/Daemons
 Requires:         %{name}%{?_isa} = %{version}-%{release}
 Requires:         %{name}-client-xlators%{?_isa} = %{version}-%{release}
+# we provide the Python package/namespace 'gluster'
+#Provides:         python-gluster = ...
 
 %description api
 GlusterFS is a distributed file-system capable of scaling to several
@@ -315,21 +318,6 @@ is in user space and easily manageable.
 
 This package provides the GlusterFS CLI application and its man page
 
-%package client-xlators
-Summary:          GlusterFS client-side translators
-Group:            Applications/File
-
-%description client-xlators
-GlusterFS is a distributed file-system capable of scaling to several
-petabytes. It aggregates various storage bricks over Infiniband RDMA
-or TCP/IP interconnect into one large parallel network file
-system. GlusterFS is one of the most sophisticated file systems in
-terms of features and extensibility.  It borrows a powerful concept
-called Translators from GNU Hurd kernel. Much of the code in GlusterFS
-is in user space and easily manageable.
-
-This package provides the translators needed on any GlusterFS client.
-
 %package devel
 Summary:          Development Libraries
 Group:            Development/Libraries
@@ -351,7 +339,7 @@ This package provides the development libraries and include files.
 %package extra-xlators
 Summary:          Extra Gluster filesystem Translators
 Group:            Applications/File
-# We need -api rpm for its __init__.py in Python
+# We need python-gluster rpm for gluster module's __init__.py in Python
 # site-packages area
 Requires:         python-gluster = %{version}-%{release}
 Requires:         python python-ctypes
@@ -367,7 +355,6 @@ is in user space and easily manageable.
 
 This package provides extra filesystem Translators, such as Glupy,
 for GlusterFS.
-
 
 %package fuse
 Summary:          Fuse client
@@ -460,7 +447,6 @@ This package provides the base GlusterFS libraries
 %package -n python-gluster
 Summary:          GlusterFS python library
 Group:            Development/Tools
-License:          GPLv3+
 %if ( ! ( 0%{?rhel} && 0%{?rhel} < 6 || 0%{?sles_version} ) )
 # EL5 does not support noarch sub-packages
 BuildArch:        noarch
@@ -601,6 +587,20 @@ is in user space and easily manageable.
 
 This package provides the glusterfs server daemon.
 
+%package client-xlators
+Summary:          GlusterFS client-side translators
+Group:            Applications/File
+
+%description client-xlators
+GlusterFS is a distributed file-system capable of scaling to several
+petabytes. It aggregates various storage bricks over Infiniband RDMA
+or TCP/IP interconnect into one large parallel network file
+system. GlusterFS is one of the most sophisticated file systems in
+terms of features and extensibility.  It borrows a powerful concept
+called Translators from GNU Hurd kernel. Much of the code in GlusterFS
+is in user space and easily manageable.
+
+This package provides the translators needed on any GlusterFS client.
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
@@ -768,21 +768,12 @@ mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/stop
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/stop/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/stop/pre
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/start
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/start/post
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/start/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/reset
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/reset/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/reset/pre
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/remove-brick
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/remove-brick/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/add-brick
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/add-brick/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/add-brick/pre
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/set
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/set/post
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/set/pre
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/create
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/create/post
@@ -803,19 +794,6 @@ mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/nfs/run
 touch %{buildroot}%{_sharedstatedir}/glusterd/nfs/nfs-server.vol
 touch %{buildroot}%{_sharedstatedir}/glusterd/nfs/run/nfs.pid
 
-%{__install} -p -m 0744 extras/hook-scripts/start/post/*.sh   \
-    %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/start/post
-%{__install} -p -m 0744 extras/hook-scripts/stop/pre/*.sh   \
-    %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/stop/pre
-%{__install} -p -m 0744 extras/hook-scripts/set/post/*.sh   \
-    %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/set/post
-%{__install} -p -m 0744 extras/hook-scripts/add-brick/post/*.sh   \
-    %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/add-brick/post
-%{__install} -p -m 0744 extras/hook-scripts/add-brick/pre/*.sh   \
-    %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/add-brick/pre
-%{__install} -p -m 0744 extras/hook-scripts/reset/post/*.sh   \
-    %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/reset/post
-
 %if ( ! 0%{_for_fedora_koji_builds} )
 find ./tests ./run-tests.sh -type f | cpio -pd %{buildroot}%{_prefix}/share/glusterfs
 %endif
@@ -823,9 +801,6 @@ find ./tests ./run-tests.sh -type f | cpio -pd %{buildroot}%{_prefix}/share/glus
 ## Install bash completion for cli
 install -p -m 0744 -D extras/command-completion/gluster.bash \
     %{buildroot}%{_sysconfdir}/bash_completion.d/gluster
-
-mv %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.* %{buildroot}%{_libexecdir}/glusterfs/
-ln -s %{_libexecdir}/glusterfs/S57glusterfind-delete-post.py %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.py
 
 
 %clean
@@ -981,12 +956,10 @@ fi
 /sbin/ldconfig
 
 ##-----------------------------------------------------------------------------
-## All %%files should be placed here and keep them sorted by groups
+## All files should be placed here and keep them grouped
 ##
 %files
-%{!?_licensedir:%global license %%doc}
-%license COPYING-GPLV2 COPYING-LGPLV3
-%doc ChangeLog INSTALL README.md THANKS
+%doc ChangeLog COPYING-GPLV2 COPYING-LGPLV3 INSTALL README.md THANKS
 %if ( 0%{!?_without_syslog:1} )
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
 %{_sysconfdir}/rsyslog.d/gluster.conf.example
@@ -1035,8 +1008,7 @@ fi
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/stat-prefetch.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/write-behind.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system/posix-acl.so
-%{_libexecdir}/glusterfs/gfind_missing_files
-%{_sbindir}/gfind_missing_files
+
 
 %files api
 %exclude %{_libdir}/*.so
@@ -1054,15 +1026,6 @@ fi
 %{_mandir}/man8/gluster.8*
 %{_sysconfdir}/bash_completion.d/gluster
 
-%files client-xlators
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/*.so
-%exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/pump.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/ganesha.so
-%if ( 0%{!?_without_qemu_block:1} )
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/qemu-block.so
-%endif
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/client.so
-
 %files devel
 %{_includedir}/glusterfs
 %exclude %{_includedir}/glusterfs/y.tab.h
@@ -1077,6 +1040,15 @@ fi
 %if ( 0%{!?_without_tiering:1} )
 %{_libdir}/pkgconfig/libgfdb.pc
 %endif
+
+%files client-xlators
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/*.so
+%exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/pump.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/ganesha.so
+%if ( 0%{!?_without_qemu_block:1} )
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/qemu-block.so
+%endif
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/client.so
 
 %files extra-xlators
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/encryption/rot-13.so
@@ -1115,6 +1087,8 @@ fi
 %{_sysconfdir}/ganesha/*
 %attr(0755,-,-) %{_libexecdir}/ganesha/*
 %attr(0755,-,-) %{_prefix}/lib/ocf/resource.d/heartbeat/*
+%{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
+%{_sharedstatedir}/glusterd/hooks/1/reset/post/S31ganesha-reset.sh
 
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
@@ -1137,12 +1111,13 @@ fi
 %{_datadir}/glusterfs/scripts/generate-gfid-file.sh
 %{_datadir}/glusterfs/scripts/gsync-sync-gfid
 %ghost %attr(0644,-,-) %{_sharedstatedir}/glusterd/geo-replication/gsyncd_template.conf
+%{_libexecdir}/glusterfs/gfind_missing_files
+%{_sbindir}/gfind_missing_files
 %endif
 
 %files libs
 %{_libdir}/*.so.*
 %exclude %{_libdir}/libgfapi.*
-# libgfdb is only needed server-side
 %if ( 0%{!?_without_tiering:1} )
 # libgfdb is only needed server-side
 %exclude %{_libdir}/libgfdb.*
@@ -1162,7 +1137,7 @@ fi
 %files regression-tests
 %{_prefix}/share/glusterfs/run-tests.sh
 %{_prefix}/share/glusterfs/tests
-%exclude %{_datadir}/glusterfs/tests/basic/rpm.t
+%exclude %{_prefix}/share/glusterfs/tests/basic/rpm.t
 %endif
 
 %if ( 0%{!?_without_ocf:1} )
@@ -1186,16 +1161,14 @@ fi
 %if ( 0%{_for_fedora_koji_builds} )
 %config(noreplace) %{_sysconfdir}/sysconfig/glusterfsd
 %endif
-%config %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre/S28Quota-enable-root-xattr-heal.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/add-brick/post/disabled-quota-root-xattr-heal.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/set/post/S30samba-set.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/set/post/S32gluster_enable_shared_storage.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/start/post/S29CTDBsetup.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/start/post/S30samba-start.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S30samba-stop.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S29CTDB-teardown.sh
-%config %{_sharedstatedir}/glusterd/hooks/1/reset/post/S31ganesha-reset.sh
+%{_sharedstatedir}/glusterd/hooks/1/add-brick/post/disabled-quota-root-xattr-heal.sh
+%{_sharedstatedir}/glusterd/hooks/1/add-brick/pre/S28Quota-enable-root-xattr-heal.sh
+%{_sharedstatedir}/glusterd/hooks/1/set/post/S30samba-set.sh
+%{_sharedstatedir}/glusterd/hooks/1/set/post/S32gluster_enable_shared_storage.sh
+%{_sharedstatedir}/glusterd/hooks/1/start/post/S29CTDBsetup.sh
+%{_sharedstatedir}/glusterd/hooks/1/start/post/S30samba-start.sh
+%{_sharedstatedir}/glusterd/hooks/1/stop/pre/S30samba-stop.sh
+%{_sharedstatedir}/glusterd/hooks/1/stop/pre/S29CTDB-teardown.sh
 # init files
 %_init_glusterd
 %if ( 0%{_for_fedora_koji_builds} )
@@ -1240,31 +1213,32 @@ fi
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre
+%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete
+%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/post
+%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/reset/post
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/post
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/post
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop
 %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/post
 
 %ghost %attr(0644,-,-) %config(noreplace) %{_sharedstatedir}/glusterd/glusterd.info
 %ghost %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
 # This is really ugly, but I have no idea how to mark these directories in
 # any other way. They should belong to the glusterfs-server package, but
 # don't exist after installation. They are generated on the first start...
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/post
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/pre
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/pre
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/pre
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/reset/pre
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/pre
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/pre
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/pre
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/reset/pre
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/pre
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/pre
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glustershd
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/vols
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/peers
@@ -1281,13 +1255,19 @@ fi
 %{_bindir}/glusterfind
 %{_libexecdir}/glusterfs/peer_add_secret_pub
 %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.py
-%{_libexecdir}/glusterfs/S57glusterfind-delete-post.*
 
 %if ( 0%{?_with_firewalld:1} )
 /usr/lib/firewalld/services/glusterfs.xml
 %endif
 
 %changelog
+* Fri Feb 12 2016  Niels de Vos <ndevos@redhat.com> - 3.7.8-1
+- GlusterFS 3.7.8 GA
+- glusterfs-server depends on -api (#1296931)
+- hook scripts in glusterfs-ganesha use dbus-send, add dependency (#1294446)
+- move hook scripts for nfs-ganesha to the -ganesha sub-package
+- use standard 'make' installation for the hook scripts (#1174765)
+
 * Mon Feb 1 2016  Niels de Vos <ndevos@redhat.com> - 3.7.7-2
 - noarch resource-agents may not depend on arch specific packages
 
