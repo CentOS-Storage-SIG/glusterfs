@@ -169,7 +169,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.7.8
-Release:          1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          2%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -198,10 +198,9 @@ BuildRequires:    python-simplejson
 %endif
 %if ( 0%{_for_fedora_koji_builds} )
 %if ( 0%{?_with_systemd:1} )
-BuildRequires:    systemd-units
-%global glusterfsd_service S:%{SOURCE7}}
+%global glusterfsd_service %{S:%{SOURCE7}}
 %else
-%global glusterfsd_service {S:%{SOURCE8}}
+%global glusterfsd_service %{S:%{SOURCE8}}
 %endif
 %endif
 
@@ -1261,6 +1260,9 @@ fi
 %endif
 
 %changelog
+* Sat Feb 13 2016  Niels de Vos <ndevos@redhat.com> - 3.7.8-2
+- Correct the usage of 'glusterfsd_service'
+
 * Fri Feb 12 2016  Niels de Vos <ndevos@redhat.com> - 3.7.8-1
 - GlusterFS 3.7.8 GA
 - glusterfs-server depends on -api (#1296931)
