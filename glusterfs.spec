@@ -149,7 +149,7 @@
 Summary:          Cluster File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.6.8
+Version:          3.6.9
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -198,7 +198,7 @@ Requires(preun):  /sbin/chkconfig
 Requires(postun): /sbin/service
 %endif
 
-Requires:         %{name}-libs = %{version}-%{release}
+Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
 BuildRequires:    bison flex
 BuildRequires:    gcc make automake libtool
 BuildRequires:    ncurses-devel readline-devel
@@ -245,7 +245,7 @@ both GlusterFS server and client framework.
 %package api
 Summary:          Clustered file-system api library
 Group:            System Environment/Daemons
-Requires:         %{name} = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
 # we provide the Python package/namespace 'gluster'
 Provides:         python-gluster = %{version}-%{release}
 
@@ -263,8 +263,8 @@ This package provides the glusterfs libgfapi library.
 %package api-devel
 Summary:          Development Libraries
 Group:            Development/Libraries
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-devel = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-devel%{?_isa} = %{version}-%{release}
 
 %description api-devel
 GlusterFS is a distributed file-system capable of scaling to several
@@ -280,7 +280,7 @@ This package provides the api include files.
 %package cli
 Summary:          GlusterFS CLI
 Group:            Applications/File
-Requires:         %{name}-libs = %{version}-%{release}
+Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description cli
 GlusterFS is a distributed file-system capable of scaling to several
@@ -296,9 +296,9 @@ This package provides the GlusterFS CLI application and its man page
 %package devel
 Summary:          Development Libraries
 Group:            Development/Libraries
-Requires:         %{name} = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
 # Needed for the Glupy examples to work
-Requires:         %{name}-extra-xlators = %{version}-%{release}
+Requires:         %{name}-extra-xlators%{?_isa} = %{version}-%{release}
 
 %description devel
 GlusterFS is a distributed file-system capable of scaling to several
@@ -315,7 +315,7 @@ This package provides the development libraries and include files.
 Summary:          Extra Gluster filesystem Translators
 Group:            Applications/File
 # We need -api rpm for its __init__.py in Python site-packages area
-Requires:         %{name}-api = %{version}-%{release}
+Requires:         %{name}-api%{?_isa} = %{version}-%{release}
 Requires:         python python-ctypes
 
 %description extra-xlators
@@ -335,7 +335,7 @@ Summary:          Fuse client
 Group:            Applications/File
 BuildRequires:    fuse-devel
 
-Requires:         %{name} = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
 Requires:         attr
 
 Obsoletes:        %{name}-client < %{version}-%{release}
@@ -356,8 +356,8 @@ This package provides support to FUSE based clients.
 %package geo-replication
 Summary:          GlusterFS Geo-replication
 Group:            Applications/File
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-server = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
 Requires:         python python-ctypes
 
 %description geo-replication
@@ -419,9 +419,9 @@ This package provides support to ib-verbs library.
 %package regression-tests
 Summary:          Development Tools
 Group:            Development/Tools
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-fuse = %{version}-%{release}
-Requires:         %{name}-server = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-fuse%{?_isa} = %{version}-%{release}
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
 ## thin provisioning support
 Requires:         lvm2 >= 2.02.89
 Requires:         perl(App::Prove) perl(Test::Harness) gcc util-linux-ng
@@ -448,7 +448,7 @@ Group:            System Environment/Base
 Group:            Productivity/Clustering/HA
 %endif
 # for glusterd
-Requires:         glusterfs-server
+Requires:         %{name}-server = %{version}-%{release}
 # depending on the distribution, we need pacemaker or resource-agents
 Requires:         %{_prefix}/lib/ocf/resource.d
 
@@ -469,12 +469,13 @@ like Pacemaker.
 %package server
 Summary:          Clustered file-system server
 Group:            System Environment/Daemons
-Requires:         %{name} = %{version}-%{release}
-Requires:         %{name}-cli = %{version}-%{release}
-Requires:         %{name}-libs = %{version}-%{release}
-Requires:         %{name}-fuse = %{version}-%{release}
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-cli%{?_isa} = %{version}-%{release}
+Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:         %{name}-fuse%{?_isa} = %{version}-%{release}
+Requires:         %{name}-api%{?_isa} = %{version}-%{release}
 # psmisc for killall, lvm2 for snapshot, and nfs-utils and
-# and rpcbind/portmap for gnfs server
+# rpcbind/portmap for gnfs server
 Requires:         psmisc
 Requires:         lvm2
 Requires:         nfs-utils
@@ -881,7 +882,6 @@ fi
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/encryption/rot-13*
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/mac-compat*
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/testing/performance/symlink-cache*
-%dir %{_datadir}/glusterfs/scripts
 %{_datadir}/glusterfs/scripts/post-upgrade-script-for-quota.sh
 %{_datadir}/glusterfs/scripts/pre-upgrade-script-for-quota.sh
 
@@ -1057,6 +1057,12 @@ fi
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
 
 %changelog
+* Mon Feb 29 2016 Niels de Vos <ndevos@redhat.com> 3.6.9-1
+- GlusterFS 3.6.9 GA
+
+* Fri Jan 08 2016 Niels de Vos <ndevos@redhat.com> 3.6.8-2
+- glusterfs-server depends on -api (#1296931)
+
 * Wed Jan 06 2016 Niels de Vos <ndevos@redhat.com> 3.6.8-1
 - GlusterFS 3.6.8 GA
 
