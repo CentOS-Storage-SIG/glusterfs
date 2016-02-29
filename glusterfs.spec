@@ -149,8 +149,8 @@
 Summary:          Cluster File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.6.8
-Release:          2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.6.9
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -448,7 +448,7 @@ Group:            System Environment/Base
 Group:            Productivity/Clustering/HA
 %endif
 # for glusterd
-Requires:         %{name}-server%{?_isa} = %{version}-%{release}
+Requires:         %{name}-server = %{version}-%{release}
 # depending on the distribution, we need pacemaker or resource-agents
 Requires:         %{_prefix}/lib/ocf/resource.d
 
@@ -475,7 +475,7 @@ Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:         %{name}-fuse%{?_isa} = %{version}-%{release}
 Requires:         %{name}-api%{?_isa} = %{version}-%{release}
 # psmisc for killall, lvm2 for snapshot, and nfs-utils and
-# and rpcbind/portmap for gnfs server
+# rpcbind/portmap for gnfs server
 Requires:         psmisc
 Requires:         lvm2
 Requires:         nfs-utils
@@ -882,7 +882,6 @@ fi
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/encryption/rot-13*
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/mac-compat*
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/testing/performance/symlink-cache*
-%dir %{_datadir}/glusterfs/scripts
 %{_datadir}/glusterfs/scripts/post-upgrade-script-for-quota.sh
 %{_datadir}/glusterfs/scripts/pre-upgrade-script-for-quota.sh
 
@@ -1058,6 +1057,9 @@ fi
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
 
 %changelog
+* Mon Feb 29 2016 Niels de Vos <ndevos@redhat.com> 3.6.9-1
+- GlusterFS 3.6.9 GA
+
 * Fri Jan 08 2016 Niels de Vos <ndevos@redhat.com> 3.6.8-2
 - glusterfs-server depends on -api (#1296931)
 
