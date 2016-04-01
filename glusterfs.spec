@@ -168,8 +168,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.8
-Release:          2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.7.10
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -198,6 +198,7 @@ BuildRequires:    python-simplejson
 %endif
 %if ( 0%{_for_fedora_koji_builds} )
 %if ( 0%{?_with_systemd:1} )
+BuildRequires:    systemd-units
 %global glusterfsd_service %{S:%{SOURCE7}}
 %else
 %global glusterfsd_service %{S:%{SOURCE8}}
@@ -269,8 +270,6 @@ Summary:          GlusterFS api library
 Group:            System Environment/Daemons
 Requires:         %{name}%{?_isa} = %{version}-%{release}
 Requires:         %{name}-client-xlators%{?_isa} = %{version}-%{release}
-# we provide the Python package/namespace 'gluster'
-#Provides:         python-gluster = ...
 
 %description api
 GlusterFS is a distributed file-system capable of scaling to several
@@ -384,8 +383,7 @@ Summary:          NFS-Ganesha configuration
 Group:            Applications/File
 
 Requires:         %{name}-server%{?_isa} = %{version}-%{release}
-Requires:         nfs-ganesha-gluster
-Requires:         pcs, /usr/bin/dbus-send
+Requires:         nfs-ganesha-gluster, pcs, dbus
 
 %description ganesha
 GlusterFS is a distributed file-system capable of scaling to several
@@ -806,33 +804,34 @@ install -p -m 0744 -D extras/command-completion/gluster.bash \
 rm -rf %{buildroot}
 
 ##-----------------------------------------------------------------------------
-## All %post should be placed here and keep them sorted
+## All %%post should be placed here and keep them sorted
 ##
 %post
+/sbin/ldconfig
 %if ( 0%{!?_without_syslog:1} )
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
 %_init_restart rsyslog
+exit 0
 %endif
 %endif
 
-%post api
-/sbin/ldconfig
+%post api -p /sbin/ldconfig
 
-%post fuse
 %if ( 0%{?rhel} == 5 )
+%post fuse
 modprobe fuse
+exit 0
 %endif
 
 %if ( 0%{!?_without_georeplication:1} )
 %post geo-replication
-#restart glusterd.
 if [ $1 -ge 1 ]; then
     %_init_restart glusterd
 fi
+exit 0
 %endif
 
-%post libs
-/sbin/ldconfig
+%post libs -p /sbin/ldconfig
 
 %post server
 # Legacy server
@@ -881,7 +880,7 @@ fi
 #reload service files if firewalld running
 if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
   #firewalld-filesystem is not available for rhel7, so command used for reload.
-  firewall-cmd  --reload
+  firewall-cmd  --reload 1>/dev/null 2>&1
 fi
 %endif
 
@@ -906,9 +905,10 @@ else
     #rpm_script_t context.
     rm -rf /var/run/glusterd.socket
 fi
+exit 0
 
 ##-----------------------------------------------------------------------------
-## All %preun should be placed here and keep them sorted
+## All %%preun should be placed here and keep them sorted
 ##
 %preun server
 if [ $1 -eq 0 ]; then
@@ -927,9 +927,10 @@ if [ $1 -ge 1 ]; then
     fi
     %_init_restart glusterd
 fi
+exit 0
 
 ##-----------------------------------------------------------------------------
-## All %postun should be placed here and keep them sorted
+## All %%postun should be placed here and keep them sorted
 ##
 %postun
 /sbin/ldconfig
@@ -939,23 +940,21 @@ fi
 %endif
 %endif
 
-%postun api
-/sbin/ldconfig
+%postun api -p /sbin/ldconfig
 
-%postun server
+%postun libs -p /sbin/ldconfig
+
 %if (0%{?_with_firewalld:1})
+%postun server
 #reload service files if firewalld running
 if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
     firewall-cmd  --reload
 fi
+exit 0
 %endif
 
-
-%postun libs
-/sbin/ldconfig
-
 ##-----------------------------------------------------------------------------
-## All files should be placed here and keep them grouped
+## All %%files should be placed here and keep them grouped
 ##
 %files
 %doc ChangeLog COPYING-GPLV2 COPYING-LGPLV3 INSTALL README.md THANKS
@@ -1007,7 +1006,10 @@ fi
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/stat-prefetch.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/write-behind.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system/posix-acl.so
-
+%dir %{_localstatedir}/run/gluster
+%if 0%{?_tmpfilesdir:1}
+%{_tmpfilesdir}/gluster.conf
+%endif
 
 %files api
 %exclude %{_libdir}/*.so
@@ -1109,6 +1111,7 @@ fi
 %{_datadir}/glusterfs/scripts/gsync-upgrade.sh
 %{_datadir}/glusterfs/scripts/generate-gfid-file.sh
 %{_datadir}/glusterfs/scripts/gsync-sync-gfid
+%{_datadir}/glusterfs/scripts/schedule_georep.py*
 %ghost %attr(0644,-,-) %{_sharedstatedir}/glusterd/geo-replication/gsyncd_template.conf
 %{_libexecdir}/glusterfs/gfind_missing_files
 %{_sbindir}/gfind_missing_files
@@ -1260,6 +1263,9 @@ fi
 %endif
 
 %changelog
+* Fri Apr 1 2016  Niels de Vos <ndevos@redhat.com> - 3.7.10-1
+- GlusterFS 3.7.10 GA
+
 * Sat Feb 13 2016  Niels de Vos <ndevos@redhat.com> - 3.7.8-2
 - Correct the usage of 'glusterfsd_service'
 
