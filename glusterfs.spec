@@ -156,7 +156,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8rc1
+Version:          3.8rc2
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -966,7 +966,6 @@ exit 0
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/pump.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/ganesha.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/client.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/dht2c.so
 
 %files extra-xlators
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/encryption/rot-13.so
@@ -1091,7 +1090,6 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bitrot-stub.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbrc.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbr.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/dht2s.so
 %if ( 0%{!?_without_tiering:1} )
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changetimerecorder.so
 %endif
@@ -1192,6 +1190,9 @@ exit 0
 %{_sbindir}/gf_recon
 
 %changelog
+* Wed May 25 2016 Niels de Vos <ndevos@redhat.com> - 3.8rc2
+- GlusterFS 3.8.0 Release Candidate 2
+
 * Mon May 16 2016 Niels de Vos <ndevos@redhat.com> - 3.8rc1
 - GlusterFS 3.8.0 Release Candidate 1
 - merged modifications from upstream spec
