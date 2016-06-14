@@ -156,7 +156,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8rc2
+Version:          3.8.0
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -585,7 +585,12 @@ CFLAGS=-DUSE_INSECURE_OPENSSL
 export CFLAGS
 %endif
 
-./autogen.sh && %configure \
+# RHEL6 and earlier need to manually replace config.guess and config.sub
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
+./autogen.sh
+%endif
+
+%configure \
         %{?_with_cmocka} \
         %{?_with_debug} \
         %{?_with_tmpfilesdir} \
@@ -737,7 +742,8 @@ rm -rf %{buildroot}
 %endif
 exit 0
 
-%post api -p /sbin/ldconfig
+%post api
+/sbin/ldconfig
 
 %if ( 0%{?rhel} == 5 )
 %post fuse
@@ -753,7 +759,8 @@ fi
 exit 0
 %endif
 
-%post libs -p /sbin/ldconfig
+%post libs
+/sbin/ldconfig
 
 %post server
 # Legacy server
@@ -862,9 +869,11 @@ exit 0
 %endif
 %endif
 
-%postun api -p /sbin/ldconfig
+%postun api
+/sbin/ldconfig
 
-%postun libs -p /sbin/ldconfig
+%postun libs
+/sbin/ldconfig
 
 %postun server
 /sbin/ldconfig
@@ -908,7 +917,6 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/barrier.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/cdc.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changelog.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/fdl.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/gfid-access.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/read-only.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/shard.so
@@ -1088,8 +1096,6 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/arbiter.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bit-rot.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bitrot-stub.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbrc.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbr.so
 %if ( 0%{!?_without_tiering:1} )
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changetimerecorder.so
 %endif
@@ -1186,10 +1192,11 @@ exit 0
 /usr/lib/firewalld/services/glusterfs.xml
 %endif
 
-%{_sbindir}/gf_logdump
-%{_sbindir}/gf_recon
-
 %changelog
+* Tue Jun 14 2016 Niels de Vos <ndevos@redhat.com> - 3.8.0-1
+- GlusterFS 3.8.0 GA
+- merged modifications from upstream spec
+
 * Wed May 25 2016 Niels de Vos <ndevos@redhat.com> - 3.8rc2
 - GlusterFS 3.8.0 Release Candidate 2
 
