@@ -168,7 +168,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.11
+Version:          3.7.12
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -739,33 +739,19 @@ install -D -p -m 0644 extras/glusterfs-georep-logrotate \
 # the rest of the ghosts
 touch %{buildroot}%{_sharedstatedir}/glusterd/glusterd.info
 touch %{buildroot}%{_sharedstatedir}/glusterd/options
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/stop
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/stop/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/start
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/start/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/remove-brick
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/remove-brick/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/set
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/set/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/create
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/create/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/create/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/delete
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/delete/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/delete/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/copy-file
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/copy-file/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/copy-file/pre
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/gsync-create
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/gsync-create/post
-mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/gsync-create/pre
+subdirs=(add-brick create copy-file delete gsync-create remove-brick reset set start stop)
+for dir in ${subdirs[@]}; do
+    mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/hooks/1/"$dir"/{pre,post}
+done
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/glustershd
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/peers
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/vols
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/nfs/run
+mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/bitd
+mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/quotad
+mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/scrub
+mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/snaps
+mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/ss_brick
 touch %{buildroot}%{_sharedstatedir}/glusterd/nfs/nfs-server.vol
 touch %{buildroot}%{_sharedstatedir}/glusterd/nfs/run/nfs.pid
 
@@ -776,7 +762,6 @@ find ./tests ./run-tests.sh -type f | cpio -pd %{buildroot}%{_prefix}/share/glus
 ## Install bash completion for cli
 install -p -m 0744 -D extras/command-completion/gluster.bash \
     %{buildroot}%{_sysconfdir}/bash_completion.d/gluster
-
 
 %clean
 rm -rf %{buildroot}
@@ -789,11 +774,12 @@ rm -rf %{buildroot}
 %if ( 0%{!?_without_syslog:1} )
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
 %_init_restart rsyslog
+%endif
+%endif
 exit 0
-%endif
-%endif
 
-%post api -p /sbin/ldconfig
+%post api
+/sbin/ldconfig
 
 %if ( 0%{?rhel} == 5 )
 %post fuse
@@ -809,7 +795,8 @@ fi
 exit 0
 %endif
 
-%post libs -p /sbin/ldconfig
+%post libs
+/sbin/ldconfig
 
 %post server
 # Legacy server
@@ -918,18 +905,21 @@ exit 0
 %endif
 %endif
 
-%postun api -p /sbin/ldconfig
+%postun api
+/sbin/ldconfig
 
-%postun libs -p /sbin/ldconfig
+%postun libs
+/sbin/ldconfig
 
-%if (0%{?_with_firewalld:1})
 %postun server
+/sbin/ldconfig
+%if (0%{?_with_firewalld:1})
 #reload service files if firewalld running
 if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
     firewall-cmd  --reload
 fi
-exit 0
 %endif
+exit 0
 
 ##-----------------------------------------------------------------------------
 ## All %%files should be placed here and keep them grouped
@@ -1059,35 +1049,37 @@ exit 0
 
 %files ganesha
 %{_sysconfdir}/ganesha/*
-%attr(0755,-,-) %{_libexecdir}/ganesha/*
-%attr(0755,-,-) %{_prefix}/lib/ocf/resource.d/heartbeat/*
+%{_libexecdir}/ganesha/*
+%{_prefix}/lib/ocf/resource.d/heartbeat/*
 %{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
 %{_sharedstatedir}/glusterd/hooks/1/reset/post/S31ganesha-reset.sh
 
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
 %config(noreplace) %{_sysconfdir}/logrotate.d/glusterfs-georep
+
+%{_sbindir}/gfind_missing_files
 %{_libexecdir}/glusterfs/gsyncd
 %{_libexecdir}/glusterfs/python/syncdaemon/*
 %{_libexecdir}/glusterfs/gverify.sh
 %{_libexecdir}/glusterfs/set_geo_rep_pem_keys.sh
 %{_libexecdir}/glusterfs/peer_gsec_create
 %{_libexecdir}/glusterfs/peer_mountbroker
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/geo-replication
-%dir %{_sharedstatedir}/glusterd/hooks
-%dir %{_sharedstatedir}/glusterd/hooks/1
-%dir %{_sharedstatedir}/glusterd/hooks/1/gsync-create
-%dir %{_sharedstatedir}/glusterd/hooks/1/gsync-create/post
-%{_sharedstatedir}/glusterd/hooks/1/gsync-create/post/S56glusterd-geo-rep-create-post.sh
+%{_libexecdir}/glusterfs/gfind_missing_files
+
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/geo-replication
+%ghost      %attr(0644,-,-) %{_sharedstatedir}/glusterd/geo-replication/gsyncd_template.conf
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/gsync-create
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/gsync-create/post
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/gsync-create/post/S56glusterd-geo-rep-create-post.sh
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/gsync-create/pre
+
 %{_datadir}/glusterfs/scripts/get-gfid.sh
 %{_datadir}/glusterfs/scripts/slave-upgrade.sh
 %{_datadir}/glusterfs/scripts/gsync-upgrade.sh
 %{_datadir}/glusterfs/scripts/generate-gfid-file.sh
 %{_datadir}/glusterfs/scripts/gsync-sync-gfid
 %{_datadir}/glusterfs/scripts/schedule_georep.py*
-%ghost %attr(0644,-,-) %{_sharedstatedir}/glusterd/geo-replication/gsyncd_template.conf
-%{_libexecdir}/glusterfs/gfind_missing_files
-%{_sbindir}/gfind_missing_files
 %endif
 
 %files libs
@@ -1123,32 +1115,19 @@ exit 0
 
 %files server
 %doc extras/clear_xattrs.sh
-%config(noreplace) %{_sysconfdir}/sysconfig/glusterd
+# sysconf
 %config(noreplace) %{_sysconfdir}/glusterfs
-%dir %{_localstatedir}/run/gluster
-%if 0%{?_tmpfilesdir:1}
-%{_tmpfilesdir}/gluster.conf
-%endif
-%dir %{_sharedstatedir}/glusterd
-%dir %{_sharedstatedir}/glusterd/groups
-%config(noreplace) %{_sharedstatedir}/glusterd/groups/virt
-# Legacy configs
+%config(noreplace) %{_sysconfdir}/sysconfig/glusterd
 %if ( 0%{_for_fedora_koji_builds} )
 %config(noreplace) %{_sysconfdir}/sysconfig/glusterfsd
 %endif
-%{_sharedstatedir}/glusterd/hooks/1/add-brick/post/disabled-quota-root-xattr-heal.sh
-%{_sharedstatedir}/glusterd/hooks/1/add-brick/pre/S28Quota-enable-root-xattr-heal.sh
-%{_sharedstatedir}/glusterd/hooks/1/set/post/S30samba-set.sh
-%{_sharedstatedir}/glusterd/hooks/1/set/post/S32gluster_enable_shared_storage.sh
-%{_sharedstatedir}/glusterd/hooks/1/start/post/S29CTDBsetup.sh
-%{_sharedstatedir}/glusterd/hooks/1/start/post/S30samba-start.sh
-%{_sharedstatedir}/glusterd/hooks/1/stop/pre/S30samba-stop.sh
-%{_sharedstatedir}/glusterd/hooks/1/stop/pre/S29CTDB-teardown.sh
+
 # init files
 %_init_glusterd
 %if ( 0%{_for_fedora_koji_builds} )
 %_init_glusterfsd
 %endif
+
 # binaries
 %{_sbindir}/glusterd
 %{_sbindir}/glfsheal
@@ -1178,49 +1157,68 @@ exit 0
 %{_libdir}/libgfdb.so.*
 %endif
 
-#snap_scheduler
+# snap_scheduler
 %{_sbindir}/snap_scheduler.py
 %{_sbindir}/gcron.py
 
-#hookscripts
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/post
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/reset/post
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/post
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/post
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop
-%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre
-
-%ghost %attr(0644,-,-) %config(noreplace) %{_sharedstatedir}/glusterd/glusterd.info
-%ghost %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
-# This is really ugly, but I have no idea how to mark these directories in
-# any other way. They should belong to the glusterfs-server package, but
-# don't exist after installation. They are generated on the first start...
+# /var/lib/glusterd, e.g. hookscripts, etc.
+%ghost      %attr(0644,-,-) %config(noreplace) %{_sharedstatedir}/glusterd/glusterd.info
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/bitd
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/groups
+            %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/virt
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glusterfind
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glusterfind/.keys
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glustershd
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post/disabled-quota-root-xattr-heal.sh
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre/S28Quota-enable-root-xattr-heal.sh
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/pre
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/copy-file
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/copy-file/post
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/copy-file/pre
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/post
+                            %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.py
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/pre
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/pre
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/reset
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/reset/post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/reset/pre
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/post
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/post/S30samba-set.sh
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/post/S32gluster_enable_shared_storage.sh
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/set/pre
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/post
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/post/S29CTDBsetup.sh
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/post/S30samba-start.sh
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/start/pre
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/post
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glustershd
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/vols
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/peers
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S30samba-stop.sh
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S29CTDB-teardown.sh
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/nfs
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/nfs-server.vol
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/nfs/run
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
+%ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/peers
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/quotad
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/scrub
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/snaps
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/ss_brick
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/vols
 
 # Extra utility script
 %{_datadir}/glusterfs/scripts/stop-all-gluster-processes.sh
@@ -1229,13 +1227,16 @@ exit 0
 %{_libexecdir}/glusterfs/glusterfind
 %{_bindir}/glusterfind
 %{_libexecdir}/glusterfs/peer_add_secret_pub
-%{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.py
 
 %if ( 0%{?_with_firewalld:1} )
 /usr/lib/firewalld/services/glusterfs.xml
 %endif
 
+
 %changelog
+* Fri Jun 24 2016  Niels de Vos <ndevos@redhat.com> - 3.7.12-1
+- GlusterFS 3.7.12 GA
+
 * Mon Apr 18 2016  Niels de Vos <ndevos@redhat.com> - 3.7.11-1
 - GlusterFS 3.7.11 GA
 
