@@ -1,0 +1,63 @@
+From fb6fbd565ff69c548b54daf8ff5c77bdf622a025 Mon Sep 17 00:00:00 2001
+From: Jiffin Tony Thottan <jthottan@redhat.com>
+Date: Thu, 23 Jun 2016 12:20:03 +0530
+Subject: [PATCH] gfapi : check the value "iovec" in glfs_io_async_cbk only for
+ read
+
+The glfs_io_async_cbk() is called from the cbk of all the async ops
+such as write, read, fsync, ftruncate. In all other cases, expect for
+read the value for "iovec" is NULL. From the code, glfs_io_async_cbk
+checks the value in common routine which may end up in failures.
+
+Thanks Joe Julian for finding issue and suggesting the fix.
+
+Upstream reference
+>Change-Id: I0be0123da68f9d8fbb5d94ede2d45566a9add6a5
+>BUG: 1349276
+>Signed-off-by: Jiffin Tony Thottan <jthottan@redhat.com>
+>Reported-by: Joe Julian <me@joejulian.name>
+>Reviewed-on: http://review.gluster.org/14779
+>Reviewed-by: Niels de Vos <ndevos@redhat.com>
+>Smoke: Gluster Build System <jenkins@build.gluster.org>
+>Tested-by: Kaleb KEITHLEY <kkeithle@redhat.com>
+>NetBSD-regression: NetBSD Build System <jenkins@build.gluster.org>
+>CentOS-regression: Gluster Build System <jenkins@build.gluster.org>
+>Reviewed-by: Joe Julian <me@joejulian.name>
+>(cherry picked from commit 61d72b3d91f2655b04de4ef29262f738a8cf7369)
+
+Change-Id: I0be0123da68f9d8fbb5d94ede2d45566a9add6a5
+BUG: 1350789
+Signed-off-by: Jiffin Tony Thottan <jthottan@redhat.com>
+Reported-by: Joe Julian <me@joejulian.name>
+---
+ api/src/glfs-fops.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/api/src/glfs-fops.c b/api/src/glfs-fops.c
+index 48bbf22..5209ce3 100644
+--- a/api/src/glfs-fops.c
++++ b/api/src/glfs-fops.c
+@@ -803,7 +803,6 @@ glfs_io_async_cbk (int op_ret, int op_errno, call_frame_t *frame,
+ 
+         GF_VALIDATE_OR_GOTO ("gfapi", frame, inval);
+         GF_VALIDATE_OR_GOTO ("gfapi", cookie, inval);
+-        GF_VALIDATE_OR_GOTO ("gfapi", iovec, inval);
+ 
+         gio = frame->local;
+         frame->local = NULL;
+@@ -817,6 +816,12 @@ glfs_io_async_cbk (int op_ret, int op_errno, call_frame_t *frame,
+         if (op_ret <= 0) {
+                 goto out;
+         } else if (gio->op == GF_FOP_READ) {
++                if (!iovec) {
++                        op_ret = -1;
++                        op_errno = EINVAL;
++                        goto out;
++                }
++
+                 op_ret = iov_copy (gio->iov, gio->count, iovec, count);
+                 glfd->offset = gio->offset + op_ret;
+         } else if (gio->op == GF_FOP_WRITE) {
+-- 
+2.5.5
+
