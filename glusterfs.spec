@@ -169,7 +169,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.7.12
-Release:          1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          2%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -190,6 +190,7 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
+Patch0001:        0001-gfapi-check-the-value-iovec-in-glfs_io_async_cbk-onl.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -596,6 +597,7 @@ This package provides the translators needed on any GlusterFS client.
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
+%patch0001 -p1 -b.bz1350880
 
 %build
 # For whatever reason, install-sh is sometimes missing. When this gets fixed,
@@ -1234,6 +1236,9 @@ exit 0
 
 
 %changelog
+* Tue Jun 28 2016  Niels de Vos <ndevos@redhat.com> - 3.7.12-2
+- Fix buffer overflow when attempting to create filesystem using libgfapi as driver on OpenStack (#1350880)
+
 * Fri Jun 24 2016  Niels de Vos <ndevos@redhat.com> - 3.7.12-1
 - GlusterFS 3.7.12 GA
 
