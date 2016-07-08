@@ -168,8 +168,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.12
-Release:          2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.7.13
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -190,7 +190,6 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
-Patch0001:        0001-gfapi-check-the-value-iovec-in-glfs_io_async_cbk-onl.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -597,7 +596,6 @@ This package provides the translators needed on any GlusterFS client.
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-%patch0001 -p1 -b.bz1350880
 
 %build
 # For whatever reason, install-sh is sometimes missing. When this gets fixed,
@@ -628,21 +626,12 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|' libtool
 
 make %{?_smp_mflags}
 
-# Build Glupy
-pushd xlators/features/glupy/src
-FLAGS="$RPM_OPT_FLAGS" python setup.py build
-popd
-
 %check
 make check
 
 %install
 rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
-# install the Glupy Python library in /usr/lib/python*/site-packages
-pushd xlators/features/glupy/src
-python setup.py install --skip-build --verbose --root %{buildroot}
-popd
 # Install include directory
 mkdir -p %{buildroot}%{_includedir}/glusterfs
 install -p -m 0644 libglusterfs/src/*.h \
@@ -679,8 +668,6 @@ mkdir -p %{buildroot}%{_localstatedir}/log/glusterd
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterfs
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterfsd
 mkdir -p %{buildroot}%{_localstatedir}/run/gluster
-touch %{buildroot}%{python_sitelib}/gluster/__init__.py
-
 
 # Remove unwanted files from all the shared libraries
 find %{buildroot}%{_libdir} -name '*.a' -delete
@@ -1028,10 +1015,6 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/testing/performance/symlink-cache.so
 # Glupy Python files
 %{python_sitelib}/gluster/glupy/*
-# Don't expect a .egg-info file on EL5
-%if ( ! ( 0%{?rhel} && 0%{?rhel} < 6 ) )
-%{python_sitelib}/glusterfs_glupy*.egg-info
-%endif
 
 %files fuse
 # glusterfs is a symlink to glusterfsd, -server depends on -fuse.
@@ -1236,6 +1219,10 @@ exit 0
 
 
 %changelog
+* Fri Jul 8 2016  Niels de Vos <ndevos@redhat.com> - 3.7.13-1
+- GlusterFS 3.7.13 GA
+- sync with upstream .spec
+
 * Tue Jun 28 2016  Niels de Vos <ndevos@redhat.com> - 3.7.12-2
 - Fix buffer overflow when attempting to create filesystem using libgfapi as driver on OpenStack (#1350880)
 
