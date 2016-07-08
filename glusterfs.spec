@@ -9,6 +9,10 @@
 ## All argument definitions should be placed here and keep them sorted
 ##
 
+# if you wish to compile an rpm with debugging...
+# rpmbuild -ta glusterfs-3.8.1.tar.gz --with debug
+%{?_with_debug:%global _with_debug --enable-debug}
+
 # if you wish to compile an rpm with cmocka unit testing...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --with cmocka
 %{?_with_cmocka:%global _with_cmocka --enable-cmocka}
@@ -156,8 +160,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8.0
-Release:          2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.8.1
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -178,7 +182,6 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
-Patch0001:        0001-gfapi-check-the-value-iovec-in-glfs_io_async_cbk-onl.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -196,13 +199,16 @@ BuildRequires:    systemd-units
 
 Requires:         %{name}-libs%{?_isa} = %{version}-%{release}
 BuildRequires:    bison flex
-BuildRequires:    gcc make automake libtool
+BuildRequires:    gcc make libtool
 BuildRequires:    ncurses-devel readline-devel
 BuildRequires:    libxml2-devel openssl-devel
 BuildRequires:    libaio-devel libacl-devel
 BuildRequires:    python-devel
 BuildRequires:    python-ctypes
 BuildRequires:    userspace-rcu-devel >= 0.7
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
+BuildRequires:    automake
+%endif
 %if ( 0%{?rhel} && 0%{?rhel} <= 5 )
 BuildRequires:    e2fsprogs-devel
 %else
@@ -579,7 +585,6 @@ This package provides the translators needed on any GlusterFS client.
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-%patch0001 -p1 -b.bz1350789
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1191,10 +1196,13 @@ exit 0
 %{_libexecdir}/glusterfs/peer_add_secret_pub
 
 %if ( 0%{?_with_firewalld:1} )
-/usr/lib/firewalld/services/glusterfs.xml
+%{_prefix}/lib/firewalld/services/glusterfs.xml
 %endif
 
 %changelog
+* Tue Jul 8 2016 Niels de Vos <ndevos@redhat.com> - 3.8.1-1
+- GlusterFS 3.8.1 GA
+
 * Tue Jun 28 2016 Niels de Vos <ndevos@redhat.com> - 3.8.0-2
 - Fix buffer overflow when attempting to create filesystem using libgfapi as driver on OpenStack (#1350789)
 
