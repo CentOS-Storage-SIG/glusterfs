@@ -161,7 +161,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.8.1
-Release:          1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          2%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -1200,6 +1200,9 @@ exit 0
 %endif
 
 %changelog
+* Sat Jul 30 2016 Niels de Vos <ndevos@redhat.com> - 3.8.1-2
+- Rebuilt for CentOS Storage SIG to enable ppc64le
+
 * Fri Jul 8 2016 Niels de Vos <ndevos@redhat.com> - 3.8.1-1
 - GlusterFS 3.8.1 GA
 
