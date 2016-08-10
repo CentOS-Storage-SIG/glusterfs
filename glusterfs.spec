@@ -160,8 +160,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8.1
-Release:          2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.8.2
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
 Name:             @PACKAGE_NAME@
@@ -1152,7 +1152,7 @@ exit 0
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/copy-file/pre
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/post
-                            %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.py
+                            %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/pre
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
@@ -1200,6 +1200,9 @@ exit 0
 %endif
 
 %changelog
+* Wed Aug 10 2016 Niels de Vos <ndevos@redhat.com> - 3.8.2-1
+- GlusterFS 3.8.2 GA
+
 * Sat Jul 30 2016 Niels de Vos <ndevos@redhat.com> - 3.8.1-2
 - Rebuilt for CentOS Storage SIG to enable ppc64le
 
