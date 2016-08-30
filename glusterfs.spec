@@ -168,7 +168,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.14
+Version:          3.7.15
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -1170,7 +1170,7 @@ exit 0
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/copy-file/pre
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/post
-                            %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post.py
+                            %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/pre
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
@@ -1219,6 +1219,10 @@ exit 0
 
 
 %changelog
+* Tue Aug 30 2016  Niels de Vos <ndevos@redhat.com> - 3.7.15-1
+- GlusterFS 3.7.15 GA
+- Removed ".py" extension from symlink(S57glusterfind-delete-post)(#1363594)
+
 * Mon Aug 1 2016  Niels de Vos <ndevos@redhat.com> - 3.7.14-1
 - GlusterFS 3.7.14 GA
 
