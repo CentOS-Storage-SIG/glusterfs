@@ -160,7 +160,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8.3
+Version:          3.8.4
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -348,6 +348,7 @@ Summary:          Fuse client
 Group:            Applications/File
 BuildRequires:    fuse-devel
 Requires:         attr
+Requires:         psmisc
 
 Requires:         %{name}%{?_isa} = %{version}-%{release}
 Requires:         %{name}-client-xlators%{?_isa} = %{version}-%{release}
@@ -1200,6 +1201,10 @@ exit 0
 %endif
 
 %changelog
+* Fri Sep 9 2016 Niels de Vos <ndevos@redhat.com> - 3.8.4-1
+- GlusterFS 3.8.4 GA
+- Add psmisc as dependency for glusterfs-fuse for killall command (#1367665)
+
 * Mon Aug 22 2016 Niels de Vos <ndevos@redhat.com> - 3.8.3-1
 - GlusterFS 3.8.3 GA
 
