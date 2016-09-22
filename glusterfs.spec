@@ -160,7 +160,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8.4
+Version:          3.9
+%global prereltag rc1
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -171,7 +172,7 @@ Vendor:           Gluster Community
 %endif
 License:          GPLv2 or LGPLv3+
 Group:            System Environment/Base
-URL:              http://www.gluster.org/docs/index.php/GlusterFS
+URL:              http://gluster.readthedocs.io/en/latest/
 %if ( 0%{_for_fedora_koji_builds} )
 Source0:          http://bits.gluster.org/pub/gluster/glusterfs/src/glusterfs-%{version}%{?prereltag}.tar.gz
 Source1:          glusterd.sysconfig
@@ -377,6 +378,8 @@ Requires:         nfs-ganesha-gluster, pcs, dbus
 %if ( 0%{?rhel} && 0%{?rhel} == 6 )
 Requires:         cman, pacemaker, corosync
 %endif
+# we need portblock resource-agent
+Requires:         %{_prefix}/lib/ocf/resource.d/portblock
 
 %description ganesha
 GlusterFS is a distributed file-system capable of scaling to several
@@ -396,7 +399,8 @@ Summary:          GlusterFS Geo-replication
 Group:            Applications/File
 Requires:         %{name}%{?_isa} = %{version}-%{release}
 Requires:         %{name}-server%{?_isa} = %{version}-%{release}
-Requires:         python python-ctypes
+Requires:         python python-ctypes python-prettytable
+Requires:         python-gluster = %{version}-%{release}
 Requires:         rsync
 
 %description geo-replication
@@ -536,7 +540,7 @@ Requires:         psmisc
 Requires:         lvm2
 Requires:         nfs-utils
 %if ( 0%{?_with_systemd:1} )
-Requires(post):   systemd-units
+Requires(post):   systemd-units, systemd
 Requires(preun):  systemd-units
 Requires(postun): systemd-units
 %else
@@ -584,6 +588,25 @@ is in user space and easily manageable.
 
 This package provides the translators needed on any GlusterFS client.
 
+%if ( 0%{!?_without_events:1} )
+%package events
+Summary:          GlusterFS Events
+Group:            Applications/File
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
+Requires:         python python-requests python-prettytable
+Requires:         python-gluster = %{version}-%{release}
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
+Requires:         python-argparse
+%endif
+%if ( 0%{?_with_systemd:1} )
+Requires(post):   systemd
+%endif
+
+%description events
+GlusterFS Events
+
+%endif
+
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
 
@@ -610,7 +633,8 @@ export CFLAGS
         %{?_without_ocf} \
         %{?_without_rdma} \
         %{?_without_syslog} \
-        %{?_without_tiering}
+        %{?_without_tiering} \
+        %{?_without_events}
 
 # fix hardening and remove rpath in shlibs
 %if ( 0%{?fedora} && 0%{?fedora} > 17 ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
@@ -880,6 +904,13 @@ exit 0
 %postun api
 /sbin/ldconfig
 
+%postun events
+%if ( 0%{!?_without_events:1} )
+%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
+%_init_restart glustereventsd
+%endif
+%endif
+
 %postun libs
 /sbin/ldconfig
 
@@ -925,6 +956,7 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/barrier.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/cdc.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changelog.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/fdl.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/gfid-access.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/read-only.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/shard.so
@@ -980,8 +1012,8 @@ exit 0
 %files client-xlators
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/*.so
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/pump.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/ganesha.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/client.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/dht2c.so
 
 %files extra-xlators
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/encryption/rot-13.so
@@ -1024,13 +1056,17 @@ exit 0
 %config(noreplace) %{_sysconfdir}/logrotate.d/glusterfs-georep
 
 %{_sbindir}/gfind_missing_files
+%{_sbindir}/gluster-mountbroker
 %{_libexecdir}/glusterfs/gsyncd
 %{_libexecdir}/glusterfs/python/syncdaemon/*
 %{_libexecdir}/glusterfs/gverify.sh
 %{_libexecdir}/glusterfs/set_geo_rep_pem_keys.sh
 %{_libexecdir}/glusterfs/peer_gsec_create
 %{_libexecdir}/glusterfs/peer_mountbroker
+%{_libexecdir}/glusterfs/peer_mountbroker.py*
 %{_libexecdir}/glusterfs/gfind_missing_files
+%{_libexecdir}/glusterfs/peer_georep-sshkey.py*
+%{_sbindir}/gluster-georep-sshkey
 
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/geo-replication
 %ghost      %attr(0644,-,-) %{_sharedstatedir}/glusterd/geo-replication/gsyncd_template.conf
@@ -1059,6 +1095,7 @@ exit 0
 # introducing glusterfs module in site packages.
 # so that all other gluster submodules can reside in the same namespace.
 %{python_sitelib}/gluster/__init__.*
+%{python_sitelib}/gluster/cliutils
 
 %if ( 0%{!?_without_rdma:1} )
 %files rdma
@@ -1083,6 +1120,7 @@ exit 0
 %doc extras/clear_xattrs.sh
 # sysconf
 %config(noreplace) %{_sysconfdir}/glusterfs
+%exclude %{_sysconfdir}/glusterfs/eventsconfig.json
 %config(noreplace) %{_sysconfdir}/sysconfig/glusterd
 %if ( 0%{_for_fedora_koji_builds} )
 %config(noreplace) %{_sysconfdir}/sysconfig/glusterfsd
@@ -1104,6 +1142,12 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/arbiter.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bit-rot.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bitrot-stub.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbrc.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbr.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/dht2s.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/posix2-ds.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/posix2-mds.so
+%{_libdir}/libposix2common.so
 %if ( 0%{!?_without_tiering:1} )
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changetimerecorder.so
 %endif
@@ -1128,6 +1172,7 @@ exit 0
 # snap_scheduler
 %{_sbindir}/snap_scheduler.py
 %{_sbindir}/gcron.py
+%{_sbindir}/conf.py
 
 # /var/lib/glusterd, e.g. hookscripts, etc.
 %ghost      %attr(0644,-,-) %config(noreplace) %{_sharedstatedir}/glusterd/glusterd.info
@@ -1200,7 +1245,30 @@ exit 0
 %{_prefix}/lib/firewalld/services/glusterfs.xml
 %endif
 
+%{_sbindir}/gf_logdump
+%{_sbindir}/gf_recon
+
+# Events
+%if ( 0%{!?_without_events:1} )
+%files events
+%config(noreplace) %{_sysconfdir}/glusterfs/eventsconfig.json
+%dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/events
+%{_libexecdir}/glusterfs/events
+%{_libexecdir}/glusterfs/peer_eventsapi.py*
+%{_sbindir}/glustereventsd
+%{_sbindir}/gluster-eventsapi
+%{_datadir}/glusterfs/scripts/eventsdash.py*
+%if ( 0%{?_with_systemd:1} )
+%{_unitdir}/glustereventsd.service
+%else
+%{_sysconfdir}/init.d/glustereventsd
+%endif
+%endif
+
 %changelog
+* Thu Sep 22 2016 Niels de Vos <ndevos@redhat.com> - 3.9-1.rc1
+- GlusterFS 3.9 Release Candidate 1
+
 * Fri Sep 9 2016 Niels de Vos <ndevos@redhat.com> - 3.8.4-1
 - GlusterFS 3.8.4 GA
 - Add psmisc as dependency for glusterfs-fuse for killall command (#1367665)
