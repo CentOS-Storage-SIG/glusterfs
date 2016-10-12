@@ -168,7 +168,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.15
+Version:          3.7.16
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -1219,6 +1219,9 @@ exit 0
 
 
 %changelog
+* Wed Oct 12 2016  Niels de Vos <ndevos@redhat.com> - 3.7.16-1
+- GlusterFS 3.7.16 GA
+
 * Tue Aug 30 2016  Niels de Vos <ndevos@redhat.com> - 3.7.15-1
 - GlusterFS 3.7.15 GA
 - Removed ".py" extension from symlink(S57glusterfind-delete-post)(#1363594)
