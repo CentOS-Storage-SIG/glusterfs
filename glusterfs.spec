@@ -160,7 +160,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8.4
+Version:          3.8.5
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -536,7 +536,7 @@ Requires:         psmisc
 Requires:         lvm2
 Requires:         nfs-utils
 %if ( 0%{?_with_systemd:1} )
-Requires(post):   systemd-units
+Requires(post):   systemd-units, systemd
 Requires(preun):  systemd-units
 Requires(postun): systemd-units
 %else
@@ -1201,6 +1201,9 @@ exit 0
 %endif
 
 %changelog
+* Thu Oct 13 2016 Niels de Vos <ndevos@redhat.com> - 3.8.5-1
+- GlusterFS 3.8.5 GA
+
 * Fri Sep 9 2016 Niels de Vos <ndevos@redhat.com> - 3.8.4-1
 - GlusterFS 3.8.4 GA
 - Add psmisc as dependency for glusterfs-fuse for killall command (#1367665)
