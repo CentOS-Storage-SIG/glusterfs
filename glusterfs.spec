@@ -160,10 +160,9 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.9
-%global prereltag rc1
-Release:          1%{?prereltag:.%{prereltag}}%{?dist}
-Vendor:           Fedora Project
+Version:          3.9.0
+%global prereltag rc2
+Release:          %{?prereltag:0.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -777,6 +776,11 @@ exit 0
 %post api
 /sbin/ldconfig
 
+%if ( 0%{!?_without_events:1} )
+%post events
+%_init_restart glustereventsd
+%endif
+
 %if ( 0%{?rhel} == 5 )
 %post fuse
 modprobe fuse
@@ -871,6 +875,17 @@ exit 0
 ##-----------------------------------------------------------------------------
 ## All %%preun should be placed here and keep them sorted
 ##
+%if ( 0%{!?_without_events:1} )
+%preun events
+if [ $1 -eq 0 ]; then
+    if [ -f %_init_glustereventsd ]; then
+        %_init_stop glustereventsd
+        %_init_disable glustereventsd
+    fi
+fi
+exit 0
+%endif
+
 %preun server
 if [ $1 -eq 0 ]; then
     if [ -f %_init_glusterfsd ]; then
@@ -903,13 +918,6 @@ exit 0
 
 %postun api
 /sbin/ldconfig
-
-%postun events
-%if ( 0%{!?_without_events:1} )
-%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
-%_init_restart glustereventsd
-%endif
-%endif
 
 %postun libs
 /sbin/ldconfig
@@ -1266,6 +1274,9 @@ exit 0
 %endif
 
 %changelog
+* Wed Oct 26 2016 Niels de Vos <ndevos@redhat.com> - 3.9.0-0.rc2
+- GlusterFS 3.9.0 Release Candidate 2
+
 * Thu Sep 22 2016 Niels de Vos <ndevos@redhat.com> - 3.9-1.rc1
 - GlusterFS 3.9 Release Candidate 1
 
