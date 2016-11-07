@@ -168,7 +168,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.16
+Version:          3.7.17
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -546,7 +546,7 @@ Requires:         psmisc
 Requires:         lvm2
 Requires:         nfs-utils
 %if ( 0%{?_with_systemd:1} )
-Requires(post):   systemd-units
+Requires(post):   systemd-units, systemd
 Requires(preun):  systemd-units
 Requires(postun): systemd-units
 %else
@@ -1219,6 +1219,9 @@ exit 0
 
 
 %changelog
+* Mon Nov 7 2016 Niels de Vos <ndevos@redhat.com> - 3.7.17-1
+- GlusterFS 3.7.17 GA
+
 * Wed Oct 12 2016  Niels de Vos <ndevos@redhat.com> - 3.7.16-1
 - GlusterFS 3.7.16 GA
 
