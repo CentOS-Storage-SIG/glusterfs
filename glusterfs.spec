@@ -161,8 +161,8 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.9.0
-%global prereltag rc2
-Release:          %{?prereltag:0.%{prereltag}}%{?dist}
+#global prereltag rc2
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -964,7 +964,6 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/barrier.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/cdc.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changelog.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/fdl.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/gfid-access.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/read-only.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/shard.so
@@ -1021,7 +1020,6 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/*.so
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/cluster/pump.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/client.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/dht2c.so
 
 %files extra-xlators
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/encryption/rot-13.so
@@ -1150,12 +1148,6 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/arbiter.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bit-rot.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bitrot-stub.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbrc.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/jbr.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/dht2s.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/posix2-ds.so
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/experimental/posix2-mds.so
-%{_libdir}/libposix2common.so
 %if ( 0%{!?_without_tiering:1} )
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changetimerecorder.so
 %endif
@@ -1253,9 +1245,6 @@ exit 0
 %{_prefix}/lib/firewalld/services/glusterfs.xml
 %endif
 
-%{_sbindir}/gf_logdump
-%{_sbindir}/gf_recon
-
 # Events
 %if ( 0%{!?_without_events:1} )
 %files events
@@ -1274,6 +1263,9 @@ exit 0
 %endif
 
 %changelog
+* Wed Nov 16 2016 Niels de Vos <ndevos@redhat.com> - 3.9.0-1
+- GlusterFS 3.9.0 GA
+
 * Wed Oct 26 2016 Niels de Vos <ndevos@redhat.com> - 3.9.0-0.rc2
 - GlusterFS 3.9.0 Release Candidate 2
 
