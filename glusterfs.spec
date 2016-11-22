@@ -162,7 +162,7 @@ Summary:          Distributed File System
 Name:             glusterfs
 Version:          3.9.0
 #global prereltag rc2
-Release:          1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          2%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -182,6 +182,8 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
+
+Patch0001:        0001-gfapi-add-glfs_free-to-glfs.h.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -608,6 +610,7 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
+%patch0001 -p1 -b.glfs_free
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1263,6 +1266,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Nov 22 2016 Niels de Vos <ndevos@redhat.com> - 3.9.0-2
+- gfapi: add glfs_free() to glfs.h (rhbz#1397506)
+
 * Wed Nov 16 2016 Niels de Vos <ndevos@redhat.com> - 3.9.0-1
 - GlusterFS 3.9.0 GA
 
