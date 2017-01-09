@@ -168,7 +168,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.18
+Version:          3.7.19
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -1037,7 +1037,6 @@ exit 0
 %{_libexecdir}/ganesha/*
 %{_prefix}/lib/ocf/resource.d/heartbeat/*
 %{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
-%{_sharedstatedir}/glusterd/hooks/1/reset/post/S31ganesha-reset.sh
 
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
@@ -1219,6 +1218,10 @@ exit 0
 
 
 %changelog
+* Mon Jan 9 2017 Niels de Vos <ndevos@redhat.com> - 3.7.19-1
+- GlusterFS 3.7.19 GA
+- remove S31ganesha-reset.sh from hooks (#1405955)
+
 * Thu Dec 8 2016 Niels de Vos <ndevos@redhat.com> - 3.7.18-1
 - GlusterFS 3.7.18 GA
 
