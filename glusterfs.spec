@@ -90,6 +90,11 @@
 %global _with_tmpfilesdir --without-tmpfilesdir
 %endif
 
+# Eventing
+%if ( 0%{?rhel} && 0%{?rhel} < 6 )
+%global _without_events --disable-events
+%endif
+
 # From https://fedoraproject.org/wiki/Packaging:Python#Macros
 %if ( 0%{?rhel} && 0%{?rhel} <= 5 )
 %{!?python_sitelib: %global python_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
@@ -160,9 +165,9 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.9.0
+Version:          3.9.1
 #global prereltag rc2
-Release:          2%{?prereltag:.%{prereltag}}%{?dist}
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -183,8 +188,6 @@ Source8:          glusterfsd.init
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
 
-Patch0001:        0001-gfapi-add-glfs_free-to-glfs.h.patch
-
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 %if ( 0%{?rhel} && 0%{?rhel} <= 5 )
@@ -192,7 +195,7 @@ BuildRequires:    python-simplejson
 %endif
 %if ( 0%{_for_fedora_koji_builds} )
 %if ( 0%{?_with_systemd:1} )
-BuildRequires:    systemd-units
+BuildRequires:    systemd
 %global glusterfsd_service %{S:%{SOURCE7}}
 %else
 %global glusterfsd_service %{S:%{SOURCE8}}
@@ -230,7 +233,7 @@ BuildRequires:    libattr-devel
 %endif
 
 %if (0%{?_with_firewalld:1})
-BuildRequires:    firewalld
+BuildRequires:    firewalld-filesystem
 %endif
 
 Obsoletes:        hekafs
@@ -379,8 +382,10 @@ Requires:         nfs-ganesha-gluster, pcs, dbus
 %if ( 0%{?rhel} && 0%{?rhel} == 6 )
 Requires:         cman, pacemaker, corosync
 %endif
-# we need portblock resource-agent
-Requires:         %{_prefix}/lib/ocf/resource.d/portblock
+%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 5 )
+# we need portblock resource-agent in 3.9.5 and later.
+Requires:         resource-agents >= 3.9.5
+%endif
 
 %description ganesha
 GlusterFS is a distributed file-system capable of scaling to several
@@ -541,14 +546,16 @@ Requires:         psmisc
 Requires:         lvm2
 Requires:         nfs-utils
 %if ( 0%{?_with_systemd:1} )
-Requires(post):   systemd-units, systemd
-Requires(preun):  systemd-units
-Requires(postun): systemd-units
+%{?systemd_requires}
 %else
 Requires(post):   /sbin/chkconfig
 Requires(preun):  /sbin/service
 Requires(preun):  /sbin/chkconfig
 Requires(postun): /sbin/service
+%endif
+%if (0%{?_with_firewalld:1})
+# we install firewalld rules, so we need to have the directory owned
+Requires:         firewalld-filesystem
 %endif
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
 Requires:         rpcbind
@@ -600,7 +607,7 @@ Requires:         python-gluster = %{version}-%{release}
 Requires:         python-argparse
 %endif
 %if ( 0%{?_with_systemd:1} )
-Requires(post):   systemd
+%{?systemd_requires}
 %endif
 
 %description events
@@ -610,7 +617,6 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-%patch0001 -p1 -b.glfs_free
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -845,11 +851,7 @@ if [ -e /etc/ld.so.conf.d/glusterfs.conf ]; then
 fi
 
 %if (0%{?_with_firewalld:1})
-#reload service files if firewalld running
-if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
-  #firewalld-filesystem is not available for rhel7, so command used for reload.
-  firewall-cmd  --reload 1>/dev/null 2>&1
-fi
+    %firewalld_reload
 %endif
 
 pidof -c -o %PPID -x glusterd &> /dev/null
@@ -928,10 +930,7 @@ exit 0
 %postun server
 /sbin/ldconfig
 %if (0%{?_with_firewalld:1})
-#reload service files if firewalld running
-if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
-    firewall-cmd  --reload
-fi
+    %firewalld_reload
 %endif
 exit 0
 
@@ -1058,7 +1057,6 @@ exit 0
 %{_libexecdir}/ganesha/*
 %{_prefix}/lib/ocf/resource.d/heartbeat/*
 %{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
-%{_sharedstatedir}/glusterd/hooks/1/reset/post/S31ganesha-reset.sh
 
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
@@ -1266,6 +1264,12 @@ exit 0
 %endif
 
 %changelog
+* Mon Jan 23 2017 Niels de Vos <ndevos@redhat.com> - 3.9.1-1
+- GlusterFS 3.9.1 GA
+- use macro provided by firewalld-filesystem to reload firewalld
+- remove S31ganesha-reset.sh from hooks (#1402366)
+- remove glfs_free() patch, it has been upstreamed
+
 * Tue Nov 22 2016 Niels de Vos <ndevos@redhat.com> - 3.9.0-2
 - gfapi: add glfs_free() to glfs.h (rhbz#1397506)
 
