@@ -168,7 +168,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.7.19
+Version:          3.7.20
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -1218,6 +1218,9 @@ exit 0
 
 
 %changelog
+* Mon Jan 30 2017 Niels de Vos <ndevos@redhat.com> - 3.7.20-1
+- GlusterFS 3.7.20 GA
+
 * Mon Jan 9 2017 Niels de Vos <ndevos@redhat.com> - 3.7.19-1
 - GlusterFS 3.7.19 GA
 - remove S31ganesha-reset.sh from hooks (#1405955)
