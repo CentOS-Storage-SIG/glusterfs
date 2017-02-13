@@ -160,7 +160,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8.8
+Version:          3.8.9
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -228,7 +228,7 @@ BuildRequires:    libattr-devel
 %endif
 
 %if (0%{?_with_firewalld:1})
-BuildRequires:    firewalld
+BuildRequires:    firewalld-filesystem
 %endif
 
 Obsoletes:        hekafs
@@ -545,6 +545,10 @@ Requires(preun):  /sbin/service
 Requires(preun):  /sbin/chkconfig
 Requires(postun): /sbin/service
 %endif
+%if (0%{?_with_firewalld:1})
+# we install firewalld rules, so we need to have the directory owned
+Requires:         firewalld-filesystem
+%endif
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
 Requires:         rpcbind
 %else
@@ -814,11 +818,7 @@ if [ -e /etc/ld.so.conf.d/glusterfs.conf ]; then
 fi
 
 %if (0%{?_with_firewalld:1})
-#reload service files if firewalld running
-if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
-  #firewalld-filesystem is not available for rhel7, so command used for reload.
-  firewall-cmd  --reload 1>/dev/null 2>&1
-fi
+    %firewalld_reload
 %endif
 
 pidof -c -o %PPID -x glusterd &> /dev/null
@@ -886,10 +886,7 @@ exit 0
 %postun server
 /sbin/ldconfig
 %if (0%{?_with_firewalld:1})
-#reload service files if firewalld running
-if $(systemctl is-active firewalld 1>/dev/null 2>&1); then
-    firewall-cmd  --reload
-fi
+    %firewalld_reload
 %endif
 exit 0
 
@@ -1200,6 +1197,10 @@ exit 0
 %endif
 
 %changelog
+* Mon Feb 13 2017 Niels de Vos <ndevos@redhat.com>
+- GlusterFS 3.8.9 GA
+- use macro provided by firewalld-filesystem to reload firewalld
+
 * Wed Jan 11 2017 Niels de Vos <ndevos@redhat.com> - 3.8.8-1
 - GlusterFS 3.8.8 GA
 
