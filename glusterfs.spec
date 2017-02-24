@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc1
+# %%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -168,7 +168,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.10.0
-Release:          0.1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -1291,6 +1291,9 @@ exit 0
 %endif
 
 %changelog
+* Fri Feb 24 2017  Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.10.01
+- 3.10.0 GA
+
 * Wed Feb 22 2017 Niels de Vos <ndevos@redhat.com>
 - 3.10.0 RC1
 - Obsolete and Provide python-gluster for upgrading from glusterfs < 3.10
