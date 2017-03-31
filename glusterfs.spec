@@ -96,7 +96,7 @@
 %endif
 
 # From https://fedoraproject.org/wiki/Packaging:Python#Macros
-%if ( 0%{?rhel} && 0%{?rhel} < 6 )
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
 %{!?python2_sitelib: %global python2_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 %{!?python2_sitearch: %global python2_sitearch %(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %endif
@@ -167,7 +167,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.0
+Version:          3.10.1
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -381,8 +381,8 @@ terms of features and extensibility.  It borrows a powerful concept
 called Translators from GNU Hurd kernel. Much of the code in GlusterFS
 is in user space and easily manageable.
 
-This package provides support to FUSE based clients and includes the
-glusterfsd and glusterfs binaries.
+This package provides support to FUSE based clients and inlcudes the
+glusterfs(d) binary.
 
 %package ganesha
 Summary:          NFS-Ganesha configuration
@@ -1136,8 +1136,6 @@ exit 0
 
 %if ( ! 0%{_for_fedora_koji_builds} )
 %files regression-tests
-%{_prefix}/share/glusterfs/run-tests.sh
-%{_prefix}/share/glusterfs/tests
 %{_datadir}/glusterfs/run-tests.sh
 %{_datadir}/glusterfs/tests
 %exclude %{_datadir}/glusterfs/tests/vagrant
@@ -1291,6 +1289,9 @@ exit 0
 %endif
 
 %changelog
+* Fri Mar 31 2017 Niels de Vos <ndevos@redhat.com> - 3.10.1
+- 3.10.1 GA
+
 * Fri Feb 24 2017  Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.10.01
 - 3.10.0 GA
 
