@@ -160,7 +160,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.8.10
+Version:          3.8.11
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 Vendor:           Fedora Project
 %else
@@ -1197,6 +1197,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Apr 11 2017 Niels de Vos <ndevos@redhat.com> - 3.8.11-1
+- GlusterFS 3.8.11 GA
+
 * Sun Mar 12 2017 Niels de Vos <ndevos@redhat.com> - 3.8.10-1
 - GlusterFS 3.8.10 GA
 
