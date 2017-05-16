@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-# %%global prereltag rc1
+%global prereltag rc0
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -12,6 +12,10 @@
 # if you wish to compile an rpm with debugging...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --with debug
 %{?_with_debug:%global _with_debug --enable-debug}
+
+# if you wish to compile an rpm to run all processes under valgrind...
+# rpmbuild -ta glusterfs-3.11.0rc0.tar.gz --with valgrind
+%{?_with_valgrind:%global _with_valgrind --enable-valgrind}
 
 # if you wish to compile an rpm with cmocka unit testing...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --with cmocka
@@ -167,8 +171,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.2
-Release:          1%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.11.0
+Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -241,7 +245,7 @@ BuildRequires:    libattr-devel
 %endif
 
 %if (0%{?_with_firewalld:1})
-BuildRequires:    firewalld-filesystem
+BuildRequires:    firewalld
 %endif
 
 Obsoletes:        hekafs
@@ -251,6 +255,7 @@ Obsoletes:        %{name}-core < %{version}-%{release}
 Obsoletes:        %{name}-regression-tests
 %endif
 Obsoletes:        %{name}-ufo
+Obsoletes:        %{name}-ganesha
 Provides:         %{name}-common = %{version}-%{release}
 Provides:         %{name}-core = %{version}-%{release}
 
@@ -384,33 +389,6 @@ is in user space and easily manageable.
 This package provides support to FUSE based clients and inlcudes the
 glusterfs(d) binary.
 
-%package ganesha
-Summary:          NFS-Ganesha configuration
-Group:            Applications/File
-
-Requires:         %{name}-server = %{version}-%{release}
-Requires:         nfs-ganesha-gluster >= 2.4.1
-Requires:         pcs, dbus
-%if ( 0%{?rhel} && 0%{?rhel} == 6 )
-Requires:         cman, pacemaker, corosync
-%endif
-%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 5 )
-# we need portblock resource-agent in 3.9.5 and later.
-Requires:         resource-agents >= 3.9.5
-%endif
-
-%description ganesha
-GlusterFS is a distributed file-system capable of scaling to several
-petabytes. It aggregates various storage bricks over Infiniband RDMA
-or TCP/IP interconnect into one large parallel network file
-system. GlusterFS is one of the most sophisticated file systems in
-terms of features and extensibility.  It borrows a powerful concept
-called Translators from GNU Hurd kernel. Much of the code in GlusterFS
-is in user space and easily manageable.
-
-This package provides the configuration and related files for using
-NFS-Ganesha as the NFS server using GlusterFS
-
 %if ( 0%{!?_without_georeplication:1} )
 %package geo-replication
 Summary:          GlusterFS Geo-replication
@@ -435,6 +413,26 @@ called Translators from GNU Hurd kernel. Much of the code in GlusterFS
 is in userspace and easily manageable.
 
 This package provides support to geo-replication.
+%endif
+
+%if ( 0%{?_with_gnfs:1} )
+%package gnfs
+Summary:          GlusterFS gNFS server
+Group:            System Environment/Daemons
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-client-xlators%{?_isa} = %{version}-%{release}
+Requires:         nfs-utils
+
+%description gnfs
+GlusterFS is a distributed file-system capable of scaling to several
+petabytes. It aggregates various storage bricks over Infiniband RDMA
+or TCP/IP interconnect into one large parallel network file
+system. GlusterFS is one of the most sophisticated file systems in
+terms of features and extensibility.  It borrows a powerful concept
+called Translators from GNU Hurd kernel. Much of the code in GlusterFS
+is in user space and easily manageable.
+
+This package provides the glusterfs legacy gNFS server xlator
 %endif
 
 %package libs
@@ -515,7 +513,7 @@ Requires:         %{name}-server = %{version}-%{release}
 Requires:         lvm2 >= 2.02.89
 Requires:         perl(App::Prove) perl(Test::Harness) gcc util-linux-ng
 Requires:         python2 attr dbench file git libacl-devel net-tools
-Requires:         nfs-utils xfsprogs yajl
+Requires:         nfs-utils xfsprogs yajl psmisc bc
 
 %description regression-tests
 The Gluster Test Framework, is a suite of scripts used for
@@ -566,11 +564,8 @@ Requires:         %{name}-fuse = %{version}-%{release}
 # self-heal daemon, rebalance, nfs-server etc. are actually clients
 Requires:         %{name}-api = %{version}-%{release}
 Requires:         %{name}-client-xlators = %{version}-%{release}
-# psmisc for killall, lvm2 for snapshot, and nfs-utils and
-# rpcbind/portmap for gnfs server
-Requires:         psmisc
+# lvm2 for snapshot, and nfs-utils and rpcbind/portmap for gnfs server
 Requires:         lvm2
-Requires:         nfs-utils
 %if ( 0%{?_with_systemd:1} )
 %{?systemd_requires}
 %else
@@ -581,7 +576,11 @@ Requires(postun): /sbin/service
 %endif
 %if (0%{?_with_firewalld:1})
 # we install firewalld rules, so we need to have the directory owned
+%if ( 0%{!?rhel} )
+# not on RHEL because firewalld-filesystem appeared in 7.3
+# when EL7 rpm gets weak dependencies we can add a Suggests:
 Requires:         firewalld-filesystem
+%endif
 %endif
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
 Requires:         rpcbind
@@ -595,6 +594,9 @@ Obsoletes:        %{name}-geo-replication = %{version}-%{release}
 Requires:         python-argparse
 %endif
 Requires:         pyxattr
+%if (0%{?_with_valgrind:1})
+Requires:         valgrind
+%endif
 
 %description server
 GlusterFS is a distributed file-system capable of scaling to several
@@ -658,17 +660,19 @@ export CFLAGS
 ./autogen.sh && %configure \
         %{?_with_cmocka} \
         %{?_with_debug} \
+        %{?_with_firewalld} \
+        %{?_with_gnfs} \
         %{?_with_tmpfilesdir} \
+        %{?_with_valgrind} \
         %{?_without_bd} \
         %{?_without_epoll} \
+        %{?_without_events} \
         %{?_without_fusermount} \
         %{?_without_georeplication} \
-        %{?_with_firewalld} \
         %{?_without_ocf} \
         %{?_without_rdma} \
         %{?_without_syslog} \
-        %{?_without_tiering} \
-        %{?_without_events}
+        %{?_without_tiering}
 
 # fix hardening and remove rpath in shlibs
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
@@ -906,6 +910,15 @@ fi
 exit 0
 
 ##-----------------------------------------------------------------------------
+## All %%pre should be placed here and keep them sorted
+##
+%pre
+getent group gluster > /dev/null || groupadd -r gluster
+getent passwd gluster > /dev/null || useradd -r -g gluster -d /var/run/gluster -s /sbin/nologin -c "GlusterFS daemons" gluster
+exit 0
+
+
+##-----------------------------------------------------------------------------
 ## All %%preun should be placed here and keep them sorted
 ##
 %if ( 0%{!?_without_events:1} )
@@ -987,6 +1000,7 @@ exit 0
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/debug
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/debug/error-gen.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/debug/io-stats.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/debug/sink.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/debug/trace.so
 %if ( ! ( 0%{?rhel} && 0%{?rhel} < 6 ) )
 # RHEL-5 based distributions have a too old openssl
@@ -1011,8 +1025,9 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/readdir-ahead.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/stat-prefetch.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/write-behind.so
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/nl-cache.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system/posix-acl.so
-%dir %{_localstatedir}/run/gluster
+%dir %attr(0775,gluster,gluster) %{_localstatedir}/run/gluster
 %if 0%{?_tmpfilesdir:1}
 %{_tmpfilesdir}/gluster.conf
 %endif
@@ -1077,11 +1092,15 @@ exit 0
 %endif
 %endif
 
-%files ganesha
-%{_sysconfdir}/ganesha/*
-%{_libexecdir}/ganesha/*
-%{_prefix}/lib/ocf/resource.d/heartbeat/*
-%{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
+%if ( 0%{?_with_gnfs:1} )
+%files gnfs
+%dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/nfs
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/nfs/*
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/nfs
+%ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/nfs-server.vol
+%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/nfs/run
+%ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
+%endif
 
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
@@ -1152,6 +1171,11 @@ exit 0
 # sysconf
 %config(noreplace) %{_sysconfdir}/glusterfs
 %exclude %{_sysconfdir}/glusterfs/eventsconfig.json
+%exclude %{_sharedstatedir}/glusterd/nfs/nfs-server.vol
+%exclude %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
+%if ( 0%{?_with_gnfs:1} )
+%exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/nfs/*
+%endif
 %config(noreplace) %{_sysconfdir}/sysconfig/glusterd
 %if ( 0%{_for_fedora_koji_builds} )
 %config(noreplace) %{_sysconfdir}/sysconfig/glusterfsd
@@ -1182,11 +1206,11 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/snapview-server.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/marker.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/quota*
+%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/selinux.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/trash.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/upcall.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/leases.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/mgmt*
-%{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/nfs*
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/server*
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage*
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/decompounder.so
@@ -1216,8 +1240,9 @@ exit 0
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post/disabled-quota-root-xattr-heal.sh
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre/S28Quota-enable-root-xattr-heal.sh
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/post
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/post
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/post/S10selinux-label-brick.sh
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/pre
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/copy-file
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/copy-file/post
@@ -1225,7 +1250,8 @@ exit 0
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/post
                             %{_sharedstatedir}/glusterd/hooks/1/delete/post/S57glusterfind-delete-post
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/pre
+       %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/pre
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/delete/pre/S10selinux-del-fcontext.sh
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/post
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/remove-brick/pre
@@ -1247,10 +1273,6 @@ exit 0
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S30samba-stop.sh
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S29CTDB-teardown.sh
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/nfs
-%ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/nfs-server.vol
-%ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/nfs/run
-%ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/peers
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/quotad
@@ -1289,6 +1311,17 @@ exit 0
 %endif
 
 %changelog
+* Tue May 16 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0rc0
+- 3.11.0 Release Candidate 0
+- gnfs in an optional subpackage
+- /var/run/gluster owner gluster:gluster(0775) for qemu(gfapi)
+  statedumps (#1445569)
+- Install SELinux hook scripts that manage contexts for bricks (#1047975)
+- firewalld-filesystem -> firewalld (#1443959)
+- the -regression-tests sub-package needs "bc" for some tests (#1442145)
+- Drop dependency on psmisc, pkill is used instead of killall (#1197308)
+- remove ganesha (#1418417)
+
 * Mon May 15 2017 Niels de Vos <ndevos@redhat.com> - 3.10.2
 - 3.10.2 GA
 
