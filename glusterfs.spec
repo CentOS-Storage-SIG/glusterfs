@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -194,6 +194,7 @@ Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+Requires(pre):    shadow-utils
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
 BuildRequires:    python-simplejson
 %endif
@@ -1311,6 +1312,9 @@ exit 0
 %endif
 
 %changelog
+* Tue May 30 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0rc1
+- 3.11.0 Release Candidate 1
+
 * Tue May 16 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0rc0
 - 3.11.0 Release Candidate 0
 - gnfs in an optional subpackage
