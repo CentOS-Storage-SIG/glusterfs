@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc1
+# %%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -1231,6 +1231,7 @@ exit 0
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/groups
             %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/virt
             %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/metadata-cache
+            %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/gluster-block
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glusterfind
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glusterfind/.keys
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glustershd
@@ -1312,6 +1313,10 @@ exit 0
 %endif
 
 %changelog
+* Tue May 30 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0
+- 3.11.0 GA
+- Install /var/lib/glusterd/groups/gluster-block by default
+
 * Tue May 30 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0rc1
 - 3.11.0 Release Candidate 1
 
