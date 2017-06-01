@@ -167,7 +167,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.2
+Version:          3.10.3
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1289,6 +1289,9 @@ exit 0
 %endif
 
 %changelog
+* Thu Jun 1 2017 Niels de Vos <ndevos@redhat.com> - 3.10.3
+- 3.10.3 GA
+
 * Mon May 15 2017 Niels de Vos <ndevos@redhat.com> - 3.10.2
 - 3.10.2 GA
 
