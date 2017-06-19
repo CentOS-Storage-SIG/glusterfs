@@ -47,6 +47,9 @@
 %global _without_georeplication --disable-georeplication
 %endif
 
+# enable the glusterfs-gnfs package by default
+%global _with_gnfs --enable-gnfs
+
 # if you wish to compile an rpm without the OCF resource agents...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without ocf
 %{?_without_ocf:%global _without_ocf --without-ocf}
@@ -172,7 +175,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.11.0
-Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -1313,6 +1316,9 @@ exit 0
 %endif
 
 %changelog
+* Mon Jun 19 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0-2
+- Build the glusterfs-gnfs sub-package
+
 * Tue May 30 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0
 - 3.11.0 GA
 - Install /var/lib/glusterd/groups/gluster-block by default
