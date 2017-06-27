@@ -174,8 +174,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.11.0
-Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.11.1
+Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -1235,6 +1235,7 @@ exit 0
             %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/virt
             %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/metadata-cache
             %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/gluster-block
+            %attr(0644,-,-) %{_sharedstatedir}/glusterd/groups/nl-cache
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glusterfind
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glusterfind/.keys
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/glustershd
@@ -1316,6 +1317,10 @@ exit 0
 %endif
 
 %changelog
+* Tue Jun 27 2017 Niels de Vos <ndevos@redhat.com> - 3.11.1-1
+- 3.11.1 GA
+- Install /var/lib/glusterd/groups/nl-cache by default
+
 * Mon Jun 19 2017 Niels de Vos <ndevos@redhat.com> - 3.11.0-2
 - Build the glusterfs-gnfs sub-package
 
