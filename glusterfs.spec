@@ -167,7 +167,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.3
+Version:          3.10.4
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -393,6 +393,10 @@ Requires:         nfs-ganesha-gluster >= 2.4.1
 Requires:         pcs, dbus
 %if ( 0%{?rhel} && 0%{?rhel} == 6 )
 Requires:         cman, pacemaker, corosync
+%endif
+%if ( 0%{?fedora} && 0%{?fedora} > 25 )
+Requires(post):   policycoreutils-python-utils
+Requires(postun): policycoreutils-python-utils
 %endif
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 5 )
 # we need portblock resource-agent in 3.9.5 and later.
@@ -822,6 +826,12 @@ modprobe fuse
 exit 0
 %endif
 
+%if ( 0%{?fedora} && 0%{?fedora} > 25 )
+%post ganesha
+semanage boolean -m ganesha_use_fusefs --on
+exit 0
+%endif
+
 %if ( 0%{!?_without_georeplication:1} )
 %post geo-replication
 if [ $1 -ge 1 ]; then
@@ -951,6 +961,12 @@ exit 0
 
 %postun api
 /sbin/ldconfig
+
+%if ( 0%{?fedora} && 0%{?fedora} > 25 )
+%postun ganesha
+semanage boolean -m ganesha_use_fusefs --off
+exit 0
+%endif
 
 %postun libs
 /sbin/ldconfig
@@ -1289,6 +1305,10 @@ exit 0
 %endif
 
 %changelog
+* Thu Jul 6 2017 Niels de Vos <ndevos@redhat.com> - 3.10.4
+- 3.10.4 GA
+- selinux enable, disable ganesha_access_fuse on install, remove
+
 * Thu Jun 1 2017 Niels de Vos <ndevos@redhat.com> - 3.10.3
 - 3.10.3 GA
 
