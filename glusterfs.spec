@@ -174,7 +174,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.11.1
+Version:          3.11.2
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1317,6 +1317,9 @@ exit 0
 %endif
 
 %changelog
+* Sat Jul 22 2017 Niels de Vos <ndevos@redhat.com> - 3.11.2-1
+- 3.11.2 GA
+
 * Tue Jun 27 2017 Niels de Vos <ndevos@redhat.com> - 3.11.1-1
 - 3.11.1 GA
 - Install /var/lib/glusterd/groups/nl-cache by default
