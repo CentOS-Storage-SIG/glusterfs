@@ -167,7 +167,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.4
+Version:          3.10.5
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -762,6 +762,13 @@ sed -i 's|option working-directory /etc/glusterd|option working-directory %{_sha
 install -D -p -m 0644 extras/glusterfs-logrotate \
     %{buildroot}%{_sysconfdir}/logrotate.d/glusterfs
 
+# ganesha ghosts
+mkdir -p %{buildroot}%{_sysconfdir}/ganesha
+touch %{buildroot}%{_sysconfdir}/ganesha/ganesha-ha.conf
+mkdir -p %{buildroot}%{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/exports
+touch %{buildroot}%{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha.conf
+touch %{buildroot}%{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha-ha.conf
+
 %if ( 0%{!?_without_georeplication:1} )
 # geo-rep ghosts
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/geo-replication
@@ -979,6 +986,24 @@ exit 0
 exit 0
 
 ##-----------------------------------------------------------------------------
+## All %%trigger should be placed here and keep them sorted
+##
+%if ( 0%{?fedora} && 0%{?fedora} > 25 )
+%trigger ganesha -- selinux-policy-targeted
+semanage boolean -m ganesha_use_fusefs --on
+exit 0
+%endif
+
+##-----------------------------------------------------------------------------
+## All %%triggerun should be placed here and keep them sorted
+##
+%if ( 0%{?fedora} && 0%{?fedora} > 25 )
+%triggerun ganesha -- selinux-policy-targeted
+semanage boolean -m ganesha_use_fusefs --off
+exit 0
+%endif
+
+##-----------------------------------------------------------------------------
 ## All %%files should be placed here and keep them grouped
 ##
 %files
@@ -1094,10 +1119,16 @@ exit 0
 %endif
 
 %files ganesha
-%{_sysconfdir}/ganesha/*
+%dir %{_libexecdir}/ganesha
 %{_libexecdir}/ganesha/*
 %{_prefix}/lib/ocf/resource.d/heartbeat/*
 %{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
+%{_sysconfdir}/ganesha/ganesha-ha.conf.sample
+%ghost %config(noreplace) %{_sysconfdir}/ganesha/ganesha-ha.conf
+%ghost %dir %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha
+%ghost %dir %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/exports
+%ghost %config(noreplace) %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha.conf
+%ghost %config(noreplace) %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha-ha.conf
 
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
@@ -1267,7 +1298,7 @@ exit 0
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/nfs-server.vol
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/nfs/run
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
-%ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
+%config(noreplace) %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/peers
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/quotad
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/scrub
@@ -1305,6 +1336,10 @@ exit 0
 %endif
 
 %changelog
+* Sat Aug 12 2017 Niels de Vos <ndevos@redhat.com> - 3.10.5-1
+- 3.10.5 GA
+- selinux enable, disable ganesha_access_fuse %%trigger, %%triggerun
+
 * Thu Jul 6 2017 Niels de Vos <ndevos@redhat.com> - 3.10.4
 - 3.10.4 GA
 - selinux enable, disable ganesha_access_fuse on install, remove
