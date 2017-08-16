@@ -176,7 +176,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.12.0
-Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}_1
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -1376,6 +1376,9 @@ exit 0
 %endif
 
 %changelog
+* Wed Aug 16 2017 Niels de Vos <ndevos@redhat.com> - 3.12.0-0.1rc0_1
+- rebuilt for new userspace-rcu
+
 * Thu Aug 10 2017 Niels de Vos <ndevos@redhat.com> - 3.12.0-0.rc0
 - 3.12.0 Release Candidate 0
 - various directories not owned by any package
