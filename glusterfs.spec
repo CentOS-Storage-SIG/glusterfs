@@ -174,7 +174,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.11.2
+Version:          3.11.3
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1279,7 +1279,7 @@ exit 0
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S30samba-stop.sh
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/stop/pre/S29CTDB-teardown.sh
-%ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
+%config(noreplace) %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/options
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/peers
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/quotad
 %ghost %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/scrub
@@ -1317,6 +1317,9 @@ exit 0
 %endif
 
 %changelog
+* Mon Aug 21 2017 Niels de Vos
+- 3.11.3 GA
+
 * Sat Jul 22 2017 Niels de Vos <ndevos@redhat.com> - 3.11.2-1
 - 3.11.2 GA
 
