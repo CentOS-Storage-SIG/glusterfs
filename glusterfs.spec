@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+#global prereltag rc0
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -150,6 +150,11 @@
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
 # _sharedstatedir is not provided by RHEL5
 %global _sharedstatedir /var/lib
+%endif
+
+%if ( 0%{?rhel} && 0%{?rhel} < 7 )
+# _rundir is not provided by RHEL6
+%global _rundir /var/run
 %endif
 
 # We do not want to generate useless provides and requires for xlator
@@ -491,8 +496,12 @@ Obsoletes:        python-gluster < 3.10
 %package rdma
 Summary:          GlusterFS rdma support for ib-verbs
 Group:            Applications/File
+%if ( 0%{?fedora} && 0%{?fedora} > 26 )
+BuildRequires:    rdma-core-devel
+%else
 BuildRequires:    libibverbs-devel
 BuildRequires:    librdmacm-devel >= 1.0.15
+%endif
 Requires:         %{name} = %{version}-%{release}
 
 %description rdma
@@ -717,7 +726,7 @@ install -D -p -m 0755 %{SOURCE6} \
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterd
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterfs
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterfsd
-mkdir -p %{buildroot}%{_localstatedir}/run/gluster
+mkdir -p %{buildroot}%{_rundir}/gluster
 
 # Remove unwanted files from all the shared libraries
 find %{buildroot}%{_libdir} -name '*.a' -delete
@@ -900,7 +909,7 @@ if [ $? -eq 0 ]; then
 
     #Cleaning leftover glusterd socket file which is created by glusterd in
     #rpm_script_t context.
-    rm -rf /var/run/glusterd.socket
+    rm -f %{_rundir}/glusterd.socket
 
     # glusterd _was_ running, we killed it, it exited after *.upgrade=on,
     # so start it again
@@ -910,7 +919,7 @@ else
 
     #Cleaning leftover glusterd socket file which is created by glusterd in
     #rpm_script_t context.
-    rm -rf /var/run/glusterd.socket
+    rm -f %{_rundir}/glusterd.socket
 fi
 exit 0
 
@@ -919,7 +928,7 @@ exit 0
 ##
 %pre
 getent group gluster > /dev/null || groupadd -r gluster
-getent passwd gluster > /dev/null || useradd -r -g gluster -d /var/run/gluster -s /sbin/nologin -c "GlusterFS daemons" gluster
+getent passwd gluster > /dev/null || useradd -r -g gluster -d %{_rundir}/gluster -s /sbin/nologin -c "GlusterFS daemons" gluster
 exit 0
 
 
@@ -1040,7 +1049,7 @@ exit 0
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/nl-cache.so
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system/posix-acl.so
-%dir %attr(0775,gluster,gluster) %{_localstatedir}/run/gluster
+%dir %attr(0775,gluster,gluster) %{_rundir}/gluster
 %if 0%{?_tmpfilesdir:1}
 %{_tmpfilesdir}/gluster.conf
 %endif
@@ -1376,6 +1385,14 @@ exit 0
 %endif
 
 %changelog
+* Wed Aug 30 2017 Niels de Vos <ndevos@redhat.com> - 3.12.0-1
+- 3.12.0 Release Candidate GA
+- Added new tool/binary to set the gfid2path xattr on files
+- libibverbs-devel, librdmacm-devel -> rdma-core-devel
+
+* Wed Aug 16 2017 Niels de Vos <ndevos@redhat.com> - 3.12.0-0.1rc0_1
+- rebuilt for new userspace-rcu
+
 * Thu Aug 10 2017 Niels de Vos <ndevos@redhat.com> - 3.12.0-0.rc0
 - 3.12.0 Release Candidate 0
 - various directories not owned by any package
