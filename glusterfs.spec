@@ -180,7 +180,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.12.0
+Version:          3.12.1
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1385,6 +1385,9 @@ exit 0
 %endif
 
 %changelog
+* Mon Sep 11 2017 Niels de Vos <ndevos@redhat.com> - 3.12.1-1
+- 3.12.1 GA
+
 * Wed Aug 30 2017 Niels de Vos <ndevos@redhat.com> - 3.12.0-1
 - 3.12.0 Release Candidate GA
 - Added new tool/binary to set the gfid2path xattr on files
