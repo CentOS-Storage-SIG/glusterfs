@@ -138,11 +138,13 @@
 %endif
 
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+%{!?_rundir: %global _rundir /var/run}
 
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
 # _sharedstatedir is not provided by RHEL5
 %global _sharedstatedir /var/lib
 %endif
+
 
 # We do not want to generate useless provides and requires for xlator
 # .so files to be set for glusterfs packages.
@@ -167,7 +169,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.5
+Version:          3.10.6
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -712,7 +714,7 @@ install -D -p -m 0755 %{SOURCE6} \
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterd
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterfs
 mkdir -p %{buildroot}%{_localstatedir}/log/glusterfsd
-mkdir -p %{buildroot}%{_localstatedir}/run/gluster
+mkdir -p %{buildroot}%{_rundir}/gluster
 
 # Remove unwanted files from all the shared libraries
 find %{buildroot}%{_libdir} -name '*.a' -delete
@@ -765,9 +767,9 @@ install -D -p -m 0644 extras/glusterfs-logrotate \
 # ganesha ghosts
 mkdir -p %{buildroot}%{_sysconfdir}/ganesha
 touch %{buildroot}%{_sysconfdir}/ganesha/ganesha-ha.conf
-mkdir -p %{buildroot}%{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/exports
-touch %{buildroot}%{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha.conf
-touch %{buildroot}%{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha-ha.conf
+mkdir -p %{buildroot}%{_rundir}/gluster/shared_storage/nfs-ganesha/exports
+touch %{buildroot}%{_rundir}/gluster/shared_storage/nfs-ganesha/ganesha.conf
+touch %{buildroot}%{_rundir}/gluster/shared_storage/nfs-ganesha/ganesha-ha.conf
 
 %if ( 0%{!?_without_georeplication:1} )
 # geo-rep ghosts
@@ -908,7 +910,7 @@ if [ $? -eq 0 ]; then
 
     #Cleaning leftover glusterd socket file which is created by glusterd in
     #rpm_script_t context.
-    rm -rf /var/run/glusterd.socket
+    rm -rf %{_rundir}/glusterd.socket
 
     # glusterd _was_ running, we killed it, it exited after *.upgrade=on,
     # so start it again
@@ -918,7 +920,7 @@ else
 
     #Cleaning leftover glusterd socket file which is created by glusterd in
     #rpm_script_t context.
-    rm -rf /var/run/glusterd.socket
+    rm -rf %{_rundir}/glusterd.socket
 fi
 exit 0
 
@@ -1053,7 +1055,7 @@ exit 0
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/stat-prefetch.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/write-behind.so
 %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system/posix-acl.so
-%dir %{_localstatedir}/run/gluster
+%dir %{_rundir}/gluster
 %if 0%{?_tmpfilesdir:1}
 %{_tmpfilesdir}/gluster.conf
 %endif
@@ -1125,10 +1127,10 @@ exit 0
 %{_sharedstatedir}/glusterd/hooks/1/start/post/S31ganesha-start.sh
 %{_sysconfdir}/ganesha/ganesha-ha.conf.sample
 %ghost %config(noreplace) %{_sysconfdir}/ganesha/ganesha-ha.conf
-%ghost %dir %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha
-%ghost %dir %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/exports
-%ghost %config(noreplace) %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha.conf
-%ghost %config(noreplace) %{_localstatedir}/run/gluster/shared_storage/nfs-ganesha/ganesha-ha.conf
+%ghost %dir %{_rundir}/gluster/shared_storage/nfs-ganesha
+%ghost %dir %{_rundir}/gluster/shared_storage/nfs-ganesha/exports
+%ghost %config(noreplace) %{_rundir}/gluster/shared_storage/nfs-ganesha/ganesha.conf
+%ghost %config(noreplace) %{_rundir}/gluster/shared_storage/nfs-ganesha/ganesha-ha.conf
 
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
@@ -1336,6 +1338,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Oct 3 2017 Niels de Vos <ndevos@redhat.com> - 3.10.6-1
+- 3.10.6 GA
+
 * Sat Aug 12 2017 Niels de Vos <ndevos@redhat.com> - 3.10.5-1
 - 3.10.5 GA
 - selinux enable, disable ganesha_access_fuse %%trigger, %%triggerun
