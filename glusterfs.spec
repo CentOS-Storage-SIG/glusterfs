@@ -180,8 +180,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.12.1
-Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.12.2
+Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -200,9 +200,6 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
-
-# rhbz#1495858 to fix 'gluster volume create ... force'
-Patch0001:        0001-cli-Bypass-the-confirmation-question-creating-replic.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -667,7 +664,6 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-%patch0001 -p1 -b.rhbz1495858
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1389,6 +1385,9 @@ exit 0
 %endif
 
 %changelog
+* Fri Oct 13 2017 Niels de Vos <ndevos@redhat.com> - 3.12.2-1
+- 3.12.2 GA
+
 * Wed Sep 27 2017 Niels de Vos <ndevos@redhat.com> - 2.12.1-2
 - cli: Bypass the confirmation question creating replica 2 volume with force (bz#1495858)
 
