@@ -102,39 +102,33 @@
 %endif
 
 %if ( 0%{?_with_systemd:1} )
-%if ( 0%{_for_fedora_koji_builds} )
-%global _init_enable()  /bin/true ;
-%else
-%global _init_enable()  /bin/systemctl enable %1.service ;
-%endif
-%global _init_disable() /bin/systemctl disable %1.service ;
-%global _init_restart() /bin/systemctl try-restart %1.service ;
-%global _init_start()   /bin/systemctl start %1.service ;
-%global _init_stop()    /bin/systemctl stop %1.service ;
-%global _init_install() install -D -p -m 0644 %1 %{buildroot}%{_unitdir}/%2.service ;
+%global service_start()   /bin/systemctl --quiet start %1.service || : \
+%{nil}
+%global service_stop()    /bin/systemctl --quiet stop %1.service || :\
+%{nil}
+%global service_install() install -D -p -m 0644 %{_sourcedir}/%1.service %{buildroot}%2 \
+%{nil}
 # can't seem to make a generic macro that works
-%global _init_glusterd   %{_unitdir}/glusterd.service
-%global _init_glusterfsd %{_unitdir}/glusterfsd.service
-%global _init_glustereventsd %{_unitdir}/glustereventsd.service
+%global glusterd_svcfile   %{_unitdir}/glusterd.service
+%global glusterfsd_svcfile %{_unitdir}/glusterfsd.service
+%global glustereventsd_svcfile %{_unitdir}/glustereventsd.service
 %else
-%global _init_enable()  /sbin/chkconfig --add %1 ;
-%global _init_disable() /sbin/chkconfig --del %1 ;
-%global _init_restart() /sbin/service %1 condrestart &>/dev/null ;
-%global _init_start()   /sbin/service %1 start &>/dev/null ;
-%global _init_stop()    /sbin/service %1 stop &>/dev/null ;
-%global _init_install() install -D -p -m 0755 %1 %{buildroot}%{_sysconfdir}/init.d/%2 ;
+%global systemd_post()  /sbin/chkconfig --add %1 >/dev/null 2>&1 || : \
+%{nil}
+%global systemd_preun() /sbin/chkconfig --del %1 >/dev/null 2>&1 || : \
+%{nil}
+%global systemd_postun_with_restart() /sbin/service %1 condrestart >/dev/null 2>&1 || : \
+%{nil}
+%global service_start()   /sbin/service %1 start >/dev/null 2>&1 || : \
+%{nil}
+%global service_stop()    /sbin/service %1 stop >/dev/null 2>&1 || : \
+%{nil}
+%global service_install() install -D -p -m 0755 %{_sourcedir}/%1.init %{buildroot}%2 \
+%{nil}
 # can't seem to make a generic macro that works
-%global _init_glusterd   %{_sysconfdir}/init.d/glusterd
-%global _init_glusterfsd %{_sysconfdir}/init.d/glusterfsd
-%global _init_glustereventsd %{_sysconfdir}/init.d/glustereventsd
-%endif
-
-%if ( 0%{_for_fedora_koji_builds} )
-%if ( 0%{?_with_systemd:1} )
-%global glusterfsd_service glusterfsd.service
-%else
-%global glusterfsd_service glusterfsd.init
-%endif
+%global glusterd_svcfile   %{_sysconfdir}/init.d/glusterd
+%global glusterfsd_svcfile %{_sysconfdir}/init.d/glusterfsd
+%global glustereventsd_svcfile %{_sysconfdir}/init.d/glustereventsd
 %endif
 
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
@@ -167,7 +161,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.6
+Version:          3.10.7
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -195,14 +189,6 @@ BuildRequires:    python-simplejson
 %endif
 %if ( 0%{?_with_systemd:1} )
 BuildRequires:    systemd
-%endif
-
-%if ( 0%{_for_fedora_koji_builds} )
-%if ( 0%{?_with_systemd:1} )
-%global glusterfsd_service %{S:%{SOURCE7}}
-%else
-%global glusterfsd_service %{S:%{SOURCE8}}
-%endif
 %endif
 
 Requires:         %{name}-libs = %{version}-%{release}
@@ -756,7 +742,7 @@ sed -i 's|option working-directory /etc/glusterd|option working-directory %{_sha
 
 # Install glusterfsd .service or init.d file
 %if ( 0%{_for_fedora_koji_builds} )
-%_init_install %{glusterfsd_service} glusterfsd
+%service_install glusterfsd %{glusterfsd_svcfile}
 %endif
 
 install -D -p -m 0644 extras/glusterfs-logrotate \
@@ -814,7 +800,7 @@ rm -rf %{buildroot}
 /sbin/ldconfig
 %if ( 0%{!?_without_syslog:1} )
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
-%_init_restart rsyslog
+%systemd_postun_with_restart rsyslog
 %endif
 %endif
 exit 0
@@ -824,7 +810,7 @@ exit 0
 
 %if ( 0%{!?_without_events:1} )
 %post events
-%_init_restart glustereventsd
+%systemd_post glustereventsd
 %endif
 
 %if ( 0%{?rhel} == 5 )
@@ -842,7 +828,7 @@ exit 0
 %if ( 0%{!?_without_georeplication:1} )
 %post geo-replication
 if [ $1 -ge 1 ]; then
-    %_init_restart glusterd
+    %systemd_postun_with_restart glusterd
 fi
 exit 0
 %endif
@@ -852,9 +838,9 @@ exit 0
 
 %post server
 # Legacy server
-%_init_enable glusterd
+%systemd_post glusterd
 %if ( 0%{_for_fedora_koji_builds} )
-%_init_enable glusterfsd
+%systemd_post glusterfsd
 %endif
 # ".cmd_log_history" is renamed to "cmd_history.log" in GlusterFS-3.7 .
 # While upgrading glusterfs-server package form GlusterFS version <= 3.6 to
@@ -912,7 +898,7 @@ if [ $? -eq 0 ]; then
 
     # glusterd _was_ running, we killed it, it exited after *.upgrade=on,
     # so start it again
-    %_init_start glusterd
+    %service_start glusterd
 else
     glusterd --xlator-option *.upgrade=on -N
 
@@ -928,9 +914,9 @@ exit 0
 %if ( 0%{!?_without_events:1} )
 %preun events
 if [ $1 -eq 0 ]; then
-    if [ -f %_init_glustereventsd ]; then
-        %_init_stop glustereventsd
-        %_init_disable glustereventsd
+    if [ -f %glustereventsd_svcfile ]; then
+        %service_stop glustereventsd
+        %systemd_preun glustereventsd
     fi
 fi
 exit 0
@@ -938,20 +924,20 @@ exit 0
 
 %preun server
 if [ $1 -eq 0 ]; then
-    if [ -f %_init_glusterfsd ]; then
-        %_init_stop glusterfsd
+    if [ -f %glusterfsd_svcfile ]; then
+        %service_stop glusterfsd
     fi
-    %_init_stop glusterd
-    if [ -f %_init_glusterfsd ]; then
-        %_init_disable glusterfsd
+    %service_stop glusterd
+    if [ -f %glusterfsd_svcfile ]; then
+        %systemd_preun glusterfsd
     fi
-    %_init_disable glusterd
+    %systemd_preun glusterd
 fi
 if [ $1 -ge 1 ]; then
-    if [ -f %_init_glusterfsd ]; then
-        %_init_restart glusterfsd
+    if [ -f %glusterfsd_svcfile ]; then
+        %systemd_postun_with_restart glusterfsd
     fi
-    %_init_restart glusterd
+    %systemd_postun_with_restart glusterd
 fi
 exit 0
 
@@ -962,7 +948,7 @@ exit 0
 /sbin/ldconfig
 %if ( 0%{!?_without_syslog:1} )
 %if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 6 )
-%_init_restart rsyslog
+%systemd_postun_with_restart rsyslog
 %endif
 %endif
 
@@ -1205,9 +1191,9 @@ exit 0
 %endif
 
 # init files
-%_init_glusterd
+%glusterd_svcfile
 %if ( 0%{_for_fedora_koji_builds} )
-%_init_glusterfsd
+%glusterfsd_svcfile
 %endif
 
 # binaries
@@ -1336,6 +1322,9 @@ exit 0
 %endif
 
 %changelog
+* Mon Oct 30 2017 Niels de Vos <ndevos@redhat.com> - 3.10.7-1
+- 3.10.7 GA
+
 * Tue Oct 3 2017 Niels de Vos <ndevos@redhat.com> - 3.10.6-1
 - 3.10.6 GA
 
@@ -1430,7 +1419,7 @@ exit 0
 - 3.8.0 RC1
 
 * Wed Apr 27 2016  Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.7.11-2
-- %postun libs on RHEL6 w/o firewalld
+- %%postun libs on RHEL6 w/o firewalld
 
 * Mon Apr 18 2016  Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.7.11-1
 - GlusterFS 3.7.11 GA
