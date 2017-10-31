@@ -176,7 +176,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          3.12.2
-Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -195,6 +195,9 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
+
+# gfapi lk_owner support
+Patch0001:        0001-gfapi-set-lkowner-in-glfd.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -659,6 +662,7 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
+%patch0001 -p1 -b.gfapi_lk_owner
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1380,6 +1384,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Oct 31 2017 Niels de Vos <ndevos@redhat.com> - 3.12.2-2
+* gfapi: set lkowner in glfd (bz#1501956)
+
 * Fri Oct 13 2017 Niels de Vos <ndevos@redhat.com> - 3.12.2-1
 - 3.12.2 GA
 
