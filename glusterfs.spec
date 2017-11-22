@@ -175,8 +175,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.12.2
-Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          3.12.3
+Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -196,8 +196,8 @@ Source8:          glusterfsd.init
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
 
-# gfapi lk_owner support
-Patch0001:        0001-gfapi-set-lkowner-in-glfd.patch
+# revert JWT signing feature, it depends on new package python-jwt
+Patch0001:        0001-Revert-eventsapi-Add-JWT-signing-support.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -662,7 +662,7 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-%patch0001 -p1 -b.gfapi_lk_owner
+%patch0001 -p1 -b.python-jwt
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1384,6 +1384,10 @@ exit 0
 %endif
 
 %changelog
+* Wed Nov 22 2017 Niels de Vos <ndevos@redhat.com> - 3.12.3-1
+- 3.12.3 GA
+- revert JWT signing support for eventsapi
+
 * Tue Oct 31 2017 Niels de Vos <ndevos@redhat.com> - 3.12.2-2
 * gfapi: set lkowner in glfd (bz#1501956)
 
