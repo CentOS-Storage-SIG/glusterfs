@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+# %%global prereltag rc0
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -14,7 +14,7 @@
 %{?_with_debug:%global _with_debug --enable-debug}
 
 # if you wish to compile an rpm to run all processes under valgrind...
-# rpmbuild -ta glusterfs-3.11.0rc0.tar.gz --with valgrind
+# rpmbuild -ta glusterfs-3.11.0.tar.gz --with valgrind
 %{?_with_valgrind:%global _with_valgrind --enable-valgrind}
 
 # if you wish to compile an rpm with cmocka unit testing...
@@ -1384,6 +1384,9 @@ exit 0
 %endif
 
 %changelog
+* Sun Dec 3 2017  Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.13.0-1
+- 3.13.0 GA
+
 * Wed Nov 22 2017 Niels de Vos <ndevos@redhat.com> - 3.13.0-0.1.rc0
 - 3.13.0 Release Candidate 0
 
