@@ -180,7 +180,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.12.4
+Version:          3.12.5
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -200,9 +200,6 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
-
-# revert JWT signing feature, it depends on new package python-jwt
-Patch0001:        0001-Revert-eventsapi-Add-JWT-signing-support.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -667,7 +664,6 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-%patch0001 -p1 -b.python-jwt
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1389,6 +1385,9 @@ exit 0
 %endif
 
 %changelog
+* Fri Jan 12 2018 Niels de Vos <ndevos@redhat.com> - 3.12.5-1
+- 3.12.5 GA
+
 * Thu Dec 14 2017 Niels de Vos <ndevos@redhat.com> - 3.12.4-1
 - 3.12.4 GA
 
