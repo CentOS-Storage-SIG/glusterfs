@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-# %%global prereltag rc0
+%global prereltag rc0
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -17,6 +17,10 @@
 # rpmbuild -ta glusterfs-3.11.0.tar.gz --with valgrind
 %{?_with_valgrind:%global _with_valgrind --enable-valgrind}
 
+# if you wish to compile an rpm with IPv6 default...
+# rpmbuild -ta glusterfs-4.0.0rc0.tar.gz --with ipv6default
+%{?_with_ipv6default:%global _with_ipv6default --with-ipv6default}
+
 # if you wish to compile an rpm with cmocka unit testing...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --with cmocka
 %{?_with_cmocka:%global _with_cmocka --enable-cmocka}
@@ -26,7 +30,7 @@
 %{?_without_rdma:%global _without_rdma --disable-ibverbs}
 
 # No RDMA Support on s390(x)
-%ifarch s390 s390x
+%ifarch s390 s390x armv7hl
 %global _without_rdma --disable-ibverbs
 %endif
 
@@ -47,8 +51,9 @@
 %global _without_georeplication --disable-georeplication
 %endif
 
-# enable the glusterfs-gnfs package by default
-%global _with_gnfs --enable-gnfs
+# if you wish to compile an rpm with the legacy gNFS server xlator
+# rpmbuild -ta glusterfs-4.0.0rc0.tar.gz --with gnfs
+%{?_with_gnfs:%global _with_gnfs --enable-gnfs}
 
 # if you wish to compile an rpm without the OCF resource agents...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without ocf
@@ -62,7 +67,7 @@
 # Fedora deprecated syslog, see
 #  https://fedoraproject.org/wiki/Changes/NoDefaultSyslog
 # (And what about RHEL7?)
-%if ( 0%{?fedora} && 0%{?fedora} >= 20 ) || ( 0%{?rhel} && 0%{?rhel} < 7 )
+%if ( 0%{?fedora} && 0%{?fedora} >= 20 ) || ( 0%{?rhel} && 0%{?rhel} <= 6 )
 %global _without_syslog --disable-syslog
 %endif
 
@@ -83,11 +88,11 @@
 ## All %%global definitions should be placed here and keep them sorted
 ##
 
-%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
+%if ( 0%{?fedora} && 0%{?fedora} > 16 ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
 %global _with_systemd true
 %endif
 
-%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
+%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} >= 7 )
 %global _with_firewalld --enable-firewalld
 %endif
 
@@ -103,9 +108,9 @@
 %endif
 
 # From https://fedoraproject.org/wiki/Packaging:Python#Macros
-%if ( 0%{?rhel} && 0%{?rhel} < 6 )
-%{!?python2_sitelib: %global python2_sitelib %(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
-%{!?python2_sitearch: %global python2_sitearch %(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
+%{!?python2_sitelib: %global python2_sitelib %(python2 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
+%{!?python2_sitearch: %global python2_sitearch %(python2 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")}
 %global _rundir %{_localstatedir}/run
 %endif
 
@@ -170,8 +175,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.13.2
-Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          4.0.0
+Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -192,12 +197,12 @@ Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
 
 # revert JWT signing feature, it depends on new package python-jwt
-Patch0001:        0001-Revert-eventsapi-Add-JWT-signing-support.patch
+#Patch0001:        0001-Revert-eventsapi-Add-JWT-signing-support.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 Requires(pre):    shadow-utils
-%if ( 0%{?rhel} && 0%{?rhel} < 6 )
+%if ( 0%{?rhel} && 0%{?rhel} <= 5 )
 BuildRequires:    python-simplejson
 %endif
 %if ( 0%{?_with_systemd:1} )
@@ -221,10 +226,10 @@ BuildRequires:    python-ctypes
 BuildRequires:    libtirpc libtirpc-devel
 %endif
 BuildRequires:    userspace-rcu-devel >= 0.7
-%if ( 0%{?rhel} && 0%{?rhel} < 7 )
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
 BuildRequires:    automake
 %endif
-%if ( 0%{?rhel} && 0%{?rhel} < 6 )
+%if ( 0%{?rhel} && 0%{?rhel} <= 5 )
 BuildRequires:    e2fsprogs-devel
 %else
 BuildRequires:    libuuid-devel
@@ -598,7 +603,11 @@ Obsoletes:        %{name}-geo-replication = %{version}-%{release}
 %if ( 0%{?rhel} && 0%{?rhel} <= 6 )
 Requires:         python-argparse
 %endif
+%if ( 0%{?fedora} && 0%{?fedora} >= 28 )
+Requires:         python2-pyxattr
+%else
 Requires:         pyxattr
+%endif
 %if (0%{?_with_valgrind:1})
 Requires:         valgrind
 %endif
@@ -655,7 +664,7 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-%patch0001 -p1 -b.python-jwt
+#%patch0001 -p1 -b.python-jwt
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -682,7 +691,7 @@ export CFLAGS
         %{?_with_ipv6default}
 
 # fix hardening and remove rpath in shlibs
-%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
+%if ( 0%{?fedora} && 0%{?fedora} > 17 ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
 sed -i 's| \\\$compiler_flags |&\\\$LDFLAGS |' libtool
 %endif
 sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|' libtool
@@ -728,7 +737,7 @@ find %{buildroot}%{_libdir} -name '*.la' -delete
 # Remove installed docs, the ones we want are included by %%doc, in
 # /usr/share/doc/glusterfs or /usr/share/doc/glusterfs-x.y.z depending
 # on the distribution
-%if ( 0%{?fedora} ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
+%if ( 0%{?fedora} && 0%{?fedora} > 19 ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
 rm -rf %{buildroot}%{_pkgdocdir}/*
 %else
 rm -rf %{buildroot}%{_defaultdocdir}/%{name}
@@ -923,7 +932,6 @@ exit 0
 getent group gluster > /dev/null || groupadd -r gluster
 getent passwd gluster > /dev/null || useradd -r -g gluster -d %{_rundir}/gluster -s /sbin/nologin -c "GlusterFS daemons" gluster
 exit 0
-
 
 ##-----------------------------------------------------------------------------
 ## All %%preun should be placed here and keep them sorted
@@ -1253,6 +1261,7 @@ exit 0
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/arbiter.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bit-rot.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bitrot-stub.so
+     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/sdfs.so
 %if ( 0%{!?_without_tiering:1} )
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changetimerecorder.so
      %{_libdir}/libgfdb.so.*
@@ -1348,6 +1357,8 @@ exit 0
      %{_datadir}/glusterfs/scripts/stop-all-gluster-processes.sh
 %if ( 0%{?_with_systemd:1} )
      %{_libexecdir}/glusterfs/mount-shared-storage.sh
+     %{_datadir}/glusterfs/scripts/control-cpu-load.sh
+     %{_datadir}/glusterfs/scripts/control-mem.sh
 %endif
 
 # Incrementalapi
@@ -1379,6 +1390,12 @@ exit 0
 %endif
 
 %changelog
+* Thu Feb 1 2018 Niels de Vos <ndevos@redhat.com> - 4.0.0-0.1.rc0
+- 4.0.0 Release Candidate 0
+- Fedora 28 has renamed pyxattr
+- Added control-cpu-load.sh and control-mem.sh scripts to glusterfs-server section(#1496335)
+- libibverbs-devel, librdmacm-devel -> rdma-core-devel #1483995
+
 * Tue Jan 23 2018 Niels de Vos <ndevos@redhat.com> - 3.13.2-2
 - rebuild for updated userspace-rcu
 
