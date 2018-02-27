@@ -3,45 +3,42 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
 ##
 
-# if you wish to compile an rpm with debugging...
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --with debug
-%{?_with_debug:%global _with_debug --enable-debug}
+# bd
+# if you wish to compile an rpm without the BD map support...
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without bd
+%{?_without_bd:%global _without_bd --disable-bd-xlator}
 
-# if you wish to compile an rpm to run all processes under valgrind...
-# rpmbuild -ta glusterfs-3.11.0.tar.gz --with valgrind
-%{?_with_valgrind:%global _with_valgrind --enable-valgrind}
+%if ( 0%{?rhel} && 0%{?rhel} < 6 || 0%{?sles_version} )
+%global _without_bd --disable-bd-xlator
+%endif
 
-# if you wish to compile an rpm with IPv6 default...
-# rpmbuild -ta glusterfs-4.0.0rc0.tar.gz --with ipv6default
-%{?_with_ipv6default:%global _with_ipv6default --with-ipv6default}
-
+# cmocka
 # if you wish to compile an rpm with cmocka unit testing...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --with cmocka
 %{?_with_cmocka:%global _with_cmocka --enable-cmocka}
 
-# if you wish to compile an rpm without rdma support, compile like this...
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without rdma
-%{?_without_rdma:%global _without_rdma --disable-ibverbs}
+# debug
+# if you wish to compile an rpm with debugging...
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --with debug
+%{?_with_debug:%global _with_debug --enable-debug}
 
-# No RDMA Support on s390(x)
-%ifarch s390 s390x armv7hl
-%global _without_rdma --disable-ibverbs
-%endif
-
+# epoll
 # if you wish to compile an rpm without epoll...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without epoll
 %{?_without_epoll:%global _without_epoll --disable-epoll}
 
+# fusermount
 # if you wish to compile an rpm without fusermount...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without fusermount
 %{?_without_fusermount:%global _without_fusermount --disable-fusermount}
 
+# geo-rep
 # if you wish to compile an rpm without geo-replication support, compile like this...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without georeplication
 %{?_without_georeplication:%global _without_georeplication --disable-georeplication}
@@ -51,14 +48,53 @@
 %global _without_georeplication --disable-georeplication
 %endif
 
+# gnfs
 # if you wish to compile an rpm with the legacy gNFS server xlator
 # rpmbuild -ta glusterfs-4.0.0rc0.tar.gz --with gnfs
 %{?_with_gnfs:%global _with_gnfs --enable-gnfs}
 
+# ipv6default
+# if you wish to compile an rpm with IPv6 default...
+# rpmbuild -ta glusterfs-4.0.0rc0.tar.gz --with ipv6default
+%{?_with_ipv6default:%global _with_ipv6default --with-ipv6default}
+
+# libtirpc
+# if you wish to compile an rpm without TIRPC (i.e. use legacy glibc rpc)
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without libtirpc
+%{?_without_libtirpc:%global _without_libtirpc --without-libtirpc}
+
+# Do not use libtirpc on EL6, it does not have xdr_uint64_t() and xdr_uint32_t
+# Do not use libtirpc on EL7, it does not have xdr_sizeof()
+%if ( 0%{?rhel} && 0%{?rhel} <= 7 )
+%global _without_libtirpc --without-libtirpc
+%endif
+
+# ocf
 # if you wish to compile an rpm without the OCF resource agents...
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without ocf
 %{?_without_ocf:%global _without_ocf --without-ocf}
 
+# rdma
+# if you wish to compile an rpm without rdma support, compile like this...
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without rdma
+%{?_without_rdma:%global _without_rdma --disable-ibverbs}
+
+# No RDMA Support on s390(x)
+%ifarch s390 s390x armv7hl
+%global _without_rdma --disable-ibverbs
+%endif
+
+# server
+# if you wish to build rpms without server components, compile like this
+# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without server
+%{?_without_server:%global _without_server --without-server}
+
+# disable server components forcefully as rhel <= 6
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
+%global _without_server --without-server
+%endif
+
+# syslog
 # if you wish to build rpms without syslog logging, compile like this
 # rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without syslog
 %{?_without_syslog:%global _without_syslog --disable-syslog}
@@ -71,18 +107,16 @@
 %global _without_syslog --disable-syslog
 %endif
 
-# if you wish to compile an rpm without the BD map support...
-# rpmbuild -ta @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz --without bd
-%{?_without_bd:%global _without_bd --disable-bd-xlator}
-
-%if ( 0%{?rhel} && 0%{?rhel} < 6 || 0%{?sles_version} )
-%global _without_bd --disable-bd-xlator
-%endif
-
+# tier
 # Disable data-tiering on EL5, sqlite is too old
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
 %global _without_tiering --disable-tiering
 %endif
+
+# valgrind
+# if you wish to compile an rpm to run all processes under valgrind...
+# rpmbuild -ta glusterfs-3.11.0.tar.gz --with valgrind
+%{?_with_valgrind:%global _with_valgrind --enable-valgrind}
 
 ##-----------------------------------------------------------------------------
 ## All %%global definitions should be placed here and keep them sorted
@@ -105,6 +139,14 @@
 # Eventing
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
 %global _without_events --disable-events
+%endif
+
+# without server should also disable some server-only components
+%if 0%{?_without_server:1}
+%global _without_events --disable-events
+%global _without_georeplication --disable-georeplication
+%global _with_gnfs %{nil}
+%global _without_tiering --disable-tiering
 %endif
 
 # From https://fedoraproject.org/wiki/Packaging:Python#Macros
@@ -222,8 +264,11 @@ BuildRequires:    python2-devel
 %if ( 0%{?rhel} )
 BuildRequires:    python-ctypes
 %endif
-%if ( 0%{?_with_ipv6default:1} )
-BuildRequires:    libtirpc libtirpc-devel
+%if ( 0%{?_with_ipv6default:1} ) || ( 0%{!?_without_libtirpc:1} )
+BuildRequires:    libtirpc-devel
+%endif
+%if ( 0%{?fedora} && 0%{?fedora} > 27 )
+BuildRequires:    rpcgen
 %endif
 BuildRequires:    userspace-rcu-devel >= 0.7
 %if ( 0%{?rhel} && 0%{?rhel} <= 6 )
@@ -310,6 +355,7 @@ is in user space and easily manageable.
 
 This package provides the api include files.
 
+%if ( 0%{!?_without_server:1} )
 %package cli
 Summary:          GlusterFS CLI
 Group:            Applications/File
@@ -325,6 +371,7 @@ called Translators from GNU Hurd kernel. Much of the code in GlusterFS
 is in user space and easily manageable.
 
 This package provides the GlusterFS CLI application and its man page
+%endif
 
 %package devel
 Summary:          Development Libraries
@@ -560,6 +607,7 @@ Open Cluster Framework (OCF) compliant cluster resource managers,
 like Pacemaker.
 %endif
 
+%if ( 0%{!?_without_server:1} )
 %package server
 Summary:          Distributed file-system server
 Group:            System Environment/Daemons
@@ -568,9 +616,6 @@ Requires:         %{name}-libs = %{version}-%{release}
 Requires:         %{name}-cli = %{version}-%{release}
 # some daemons (like quota) use a fuse-mount, glusterfsd is part of -fuse
 Requires:         %{name}-fuse = %{version}-%{release}
-%if ( 0%{?_with_ipv6default:1} )
-Requires:         libtirpc
-%endif
 # self-heal daemon, rebalance, nfs-server etc. are actually clients
 Requires:         %{name}-api = %{version}-%{release}
 Requires:         %{name}-client-xlators = %{version}-%{release}
@@ -622,6 +667,7 @@ called Translators from GNU Hurd kernel. Much of the code in GlusterFS
 is in user space and easily manageable.
 
 This package provides the glusterfs server daemon.
+%endif
 
 %package client-xlators
 Summary:          GlusterFS client-side translators
@@ -686,9 +732,11 @@ export CFLAGS
         %{?_without_georeplication} \
         %{?_without_ocf} \
         %{?_without_rdma} \
+        %{?_without_server} \
         %{?_without_syslog} \
         %{?_without_tiering} \
-        %{?_with_ipv6default}
+        %{?_with_ipv6default} \
+        %{?_without_libtirpc}
 
 # fix hardening and remove rpath in shlibs
 %if ( 0%{?fedora} && 0%{?fedora} > 17 ) || ( 0%{?rhel} && 0%{?rhel} > 6 )
@@ -714,8 +762,10 @@ install -D -p -m 0644 %{SOURCE1} \
 install -D -p -m 0644 %{SOURCE2} \
     %{buildroot}%{_sysconfdir}/sysconfig/glusterfsd
 %else
+%if ( 0%{!?_without_server:1} )
 install -D -p -m 0644 extras/glusterd-sysconfig \
     %{buildroot}%{_sysconfdir}/sysconfig/glusterd
+%endif
 %endif
 
 %if ( 0%{_for_fedora_koji_builds} )
@@ -763,12 +813,14 @@ rm -f %{buildroot}%{_defaultdocdir}/%{name}/glusterfs-mode.el
 rm -f %{buildroot}%{_defaultdocdir}/%{name}/glusterfs.vim
 %endif
 
+%if ( 0%{!?_without_server:1} )
 # Create working directory
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd
 
 # Update configuration file to /var/lib working directory
 sed -i 's|option working-directory /etc/glusterd|option working-directory %{_sharedstatedir}/glusterd|g' \
     %{buildroot}%{_sysconfdir}/glusterfs/glusterd.vol
+%endif
 
 # Install glusterfsd .service or init.d file
 %if ( 0%{_for_fedora_koji_builds} )
@@ -786,6 +838,7 @@ install -D -p -m 0644 extras/glusterfs-georep-logrotate \
     %{buildroot}%{_sysconfdir}/logrotate.d/glusterfs-georep
 %endif
 
+%if ( 0%{!?_without_server:1} )
 # the rest of the ghosts
 touch %{buildroot}%{_sharedstatedir}/glusterd/glusterd.info
 touch %{buildroot}%{_sharedstatedir}/glusterd/options
@@ -804,14 +857,17 @@ mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/snaps
 mkdir -p %{buildroot}%{_sharedstatedir}/glusterd/ss_brick
 touch %{buildroot}%{_sharedstatedir}/glusterd/nfs/nfs-server.vol
 touch %{buildroot}%{_sharedstatedir}/glusterd/nfs/run/nfs.pid
+%endif
 
 %if ( ! 0%{_for_fedora_koji_builds} )
 find ./tests ./run-tests.sh -type f | cpio -pd %{buildroot}%{_prefix}/share/glusterfs
 %endif
 
 ## Install bash completion for cli
+%if ( 0%{!?_without_server:1} )
 install -p -m 0744 -D extras/command-completion/gluster.bash \
     %{buildroot}%{_sysconfdir}/bash_completion.d/gluster
+%endif
 
 %clean
 rm -rf %{buildroot}
@@ -853,6 +909,7 @@ exit 0
 %post libs
 /sbin/ldconfig
 
+%if ( 0%{!?_without_server:1} )
 %post server
 # Legacy server
 %systemd_post glusterd
@@ -924,6 +981,7 @@ else
     rm -f %{_rundir}/glusterd.socket
 fi
 exit 0
+%endif
 
 ##-----------------------------------------------------------------------------
 ## All %%pre should be placed here and keep them sorted
@@ -947,6 +1005,7 @@ fi
 exit 0
 %endif
 
+%if ( 0%{!?_without_server:1} )
 %preun server
 if [ $1 -eq 0 ]; then
     if [ -f %glusterfsd_svcfile ]; then
@@ -965,6 +1024,7 @@ if [ $1 -ge 1 ]; then
     %systemd_postun_with_restart glusterd
 fi
 exit 0
+%endif
 
 ##-----------------------------------------------------------------------------
 ## All %%postun should be placed here and keep them sorted
@@ -983,12 +1043,14 @@ exit 0
 %postun libs
 /sbin/ldconfig
 
+%if ( 0%{!?_without_server:1} )
 %postun server
 /sbin/ldconfig
 %if (0%{?_with_firewalld:1})
     %firewalld_reload
 %endif
 exit 0
+%endif
 
 ##-----------------------------------------------------------------------------
 ## All %%files should be placed here and keep them grouped
@@ -998,15 +1060,19 @@ exit 0
 %license COPYING-GPLV2 COPYING-LGPLV3
 %doc ChangeLog INSTALL README.md THANKS
 %{_mandir}/man8/*gluster*.8*
+%if ( 0%{!?_without_server:1} )
 %exclude %{_mandir}/man8/gluster.8*
+%endif
 %dir %{_localstatedir}/log/glusterfs
 %if ( 0%{!?_without_rdma:1} )
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/rpc-transport/rdma*
 %endif
+%if ( 0%{!?_without_server:1} )
 %dir %{_datadir}/glusterfs
 %dir %{_datadir}/glusterfs/scripts
      %{_datadir}/glusterfs/scripts/post-upgrade-script-for-quota.sh
      %{_datadir}/glusterfs/scripts/pre-upgrade-script-for-quota.sh
+%endif
 # xlators that are needed on the client- and on the server-side
 %dir %{_libdir}/glusterfs
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}
@@ -1052,7 +1118,7 @@ exit 0
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system/posix-acl.so
 %dir %attr(0775,gluster,gluster) %{_rundir}/gluster
-%if 0%{?_tmpfilesdir:1}
+%if ( 0%{?_tmpfilesdir:1} && 0%{!?_without_server:1} )
 %{_tmpfilesdir}/gluster.conf
 %endif
 
@@ -1071,10 +1137,12 @@ exit 0
 %dir %{_includedir}/glusterfs/api
      %{_includedir}/glusterfs/api/*
 
+%if ( 0%{!?_without_server:1} )
 %files cli
 %{_sbindir}/gluster
 %{_mandir}/man8/gluster.8*
 %{_sysconfdir}/bash_completion.d/gluster
+%endif
 
 %files devel
 %dir %{_includedir}/glusterfs
@@ -1136,7 +1204,7 @@ exit 0
 %endif
 %endif
 
-%if ( 0%{?_with_gnfs:1} )
+%if ( 0%{?_with_gnfs:1} && 0%{!?_without_server:1} )
 %files gnfs
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/nfs
@@ -1219,6 +1287,7 @@ exit 0
 %{_prefix}/lib/ocf/resource.d/glusterfs
 %endif
 
+%if ( 0%{!?_without_server:1} )
 %files server
 %doc extras/clear_xattrs.sh
 # sysconf
@@ -1369,6 +1438,7 @@ exit 0
 %if ( 0%{?_with_firewalld:1} )
 %{_prefix}/lib/firewalld/services/glusterfs.xml
 %endif
+%endif
 
 # Events
 %if ( 0%{!?_without_events:1} )
@@ -1390,6 +1460,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Feb 27 2018 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 4.0.0-0.1.rc1
+- 4.0.0 Release Candidate 1
+
 * Thu Feb 1 2018 Niels de Vos <ndevos@redhat.com> - 4.0.0-0.1.rc0
 - 4.0.0 Release Candidate 0
 - Fedora 28 has renamed pyxattr
