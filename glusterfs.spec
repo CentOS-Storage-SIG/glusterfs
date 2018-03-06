@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc1
+# %%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -228,7 +228,7 @@ License:          GPLv2 or LGPLv3+
 Group:            System Environment/Base
 URL:              http://gluster.readthedocs.io/en/latest/
 %if ( 0%{_for_fedora_koji_builds} )
-Source0:          http://bits.gluster.org/pub/gluster/%{name}/src/%{name}-%{version}%{?prereltag}.tar.gz
+Source0:          http://download.gluster.org/pub/gluster/%{name}/4.0/%{version}%{?prereltag}/%{name}-%{version}%{?prereltag}.tar.gz
 Source1:          glusterd.sysconfig
 Source2:          glusterfsd.sysconfig
 Source6:          rhel5-load-fuse-modules
@@ -1460,6 +1460,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Mar 6 2018 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 4.0.0-1
+- 4.0.0 GA
+
 * Tue Feb 27 2018 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 4.0.0-0.1.rc1
 - 4.0.0 Release Candidate 1
 
