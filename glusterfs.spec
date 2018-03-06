@@ -163,7 +163,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.10
+Version:          3.10.11
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1324,6 +1324,9 @@ exit 0
 %endif
 
 %changelog
+* Thu Mar 1 2018 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.10.11-1
+- 3.10.11 GA
+
 * Wed Jan 31 2018 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.10.10-1
 - 3.10.10 GA
 
