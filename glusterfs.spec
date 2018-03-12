@@ -231,7 +231,6 @@ URL:              http://gluster.readthedocs.io/en/latest/
 Source0:          http://download.gluster.org/pub/gluster/%{name}/4.0/%{version}%{?prereltag}/%{name}-%{version}%{?prereltag}.tar.gz
 Source1:          glusterd.sysconfig
 Source2:          glusterfsd.sysconfig
-Source6:          rhel5-load-fuse-modules
 Source7:          glusterfsd.service
 Source8:          glusterfsd.init
 %else
