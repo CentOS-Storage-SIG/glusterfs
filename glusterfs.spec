@@ -161,7 +161,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          3.10.11
+Version:          3.10.12
 Release:          1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -931,7 +931,7 @@ if [ $1 -eq 0 ]; then
     if [ -f %glusterfsd_svcfile ]; then
         %systemd_preun glusterfsd
     fi
-    %systemd_preun glusterd
+    %systemd_postun_with_restart glusterd
 fi
 if [ $1 -ge 1 ]; then
     if [ -f %glusterfsd_svcfile ]; then
@@ -1322,6 +1322,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Apr 24 2018 Niels de Vos <ndevos@redhat.com> - 3.10.12-1
+- 3.10.12 GA
+
 * Thu Mar 1 2018 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 3.10.11-1
 - 3.10.11 GA
 
