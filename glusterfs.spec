@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-# %%global prereltag rc1
+%global prereltag rc0
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -68,6 +68,7 @@
 %if ( 0%{?rhel} && 0%{?rhel} <= 7 )
 %global _without_libtirpc --without-libtirpc
 %endif
+
 
 # ocf
 # if you wish to compile an rpm without the OCF resource agents...
@@ -217,7 +218,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          4.0.2
+Version:          4.1.0
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -236,9 +237,6 @@ Source8:          glusterfsd.init
 %else
 Source0:          @PACKAGE_NAME@-@PACKAGE_VERSION@.tar.gz
 %endif
-
-# revert JWT signing feature, it depends on new package python-jwt
-#Patch0001:        0001-Revert-eventsapi-Add-JWT-signing-support.patch
 
 BuildRoot:        %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
@@ -260,7 +258,7 @@ BuildRequires:    ncurses-devel readline-devel
 BuildRequires:    libxml2-devel openssl-devel
 BuildRequires:    libaio-devel libacl-devel
 BuildRequires:    python2-devel
-%if ( 0%{?rhel} )
+%if ( 0%{?fedora} && 0%{?fedora} < 26 ) || ( 0%{?rhel} && 0%{?rhel} <= 7 )
 BuildRequires:    python-ctypes
 %endif
 %if ( 0%{?_with_ipv6default:1} ) || ( 0%{!?_without_libtirpc:1} )
@@ -717,7 +715,12 @@ CFLAGS=-DUSE_INSECURE_OPENSSL
 export CFLAGS
 %endif
 
-./autogen.sh && %configure \
+# RHEL6 and earlier need to manually replace config.guess and config.sub
+%if ( 0%{?rhel} && 0%{?rhel} <= 6 )
+./autogen.sh
+%endif
+
+%configure \
         %{?_with_cmocka} \
         %{?_with_debug} \
         %{?_with_firewalld} \
@@ -1070,7 +1073,7 @@ exit 0
 %if ( 0%{!?_without_rdma:1} )
 %exclude %{_libdir}/glusterfs/%{version}%{?prereltag}/rpc-transport/rdma*
 %endif
-%if ( 0%{!?_without_server:1} )
+%if 0%{?!_without_server:1}
 %dir %{_datadir}/glusterfs
 %dir %{_datadir}/glusterfs/scripts
      %{_datadir}/glusterfs/scripts/post-upgrade-script-for-quota.sh
@@ -1101,11 +1104,14 @@ exit 0
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/barrier.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/cdc.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/changelog.so
+     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/utime.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/gfid-access.so
+     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/namespace.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/read-only.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/shard.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/snapview-client.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/worm.so
+     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/cloudsync.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/meta.so
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/io-cache.so
@@ -1121,7 +1127,7 @@ exit 0
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/system/posix-acl.so
 %dir %attr(0775,gluster,gluster) %{_rundir}/gluster
-%if ( 0%{?_tmpfilesdir:1} && 0%{!?_without_server:1} )
+%if 0%{?_tmpfilesdir:1} && 0%{!?_without_server:1}
 %{_tmpfilesdir}/gluster.conf
 %endif
 
@@ -1331,6 +1337,7 @@ exit 0
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/arbiter.so
+     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/thin-arbiter.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bit-rot.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bitrot-stub.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/sdfs.so
@@ -1380,8 +1387,9 @@ exit 0
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post/disabled-quota-root-xattr-heal.sh
-            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre/S28Quota-enable-root-xattr-heal.sh
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/post/S13create-subdir-mounts.sh
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre
+            %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/add-brick/pre/S28Quota-enable-root-xattr-heal.sh
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create
        %dir %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/post
             %attr(0755,-,-) %{_sharedstatedir}/glusterd/hooks/1/create/post/S10selinux-label-brick.sh
@@ -1441,6 +1449,8 @@ exit 0
 %if ( 0%{?_with_firewalld:1} )
 %{_prefix}/lib/firewalld/services/glusterfs.xml
 %endif
+
+# end of server files
 %endif
 
 # Events
@@ -1463,6 +1473,9 @@ exit 0
 %endif
 
 %changelog
+* Sat Jun 2 2018 Niels de Vos <ndevos@redhat.com> - 4.2.0-0.1.rc0
+- 4.1.0 Release Candidate 0
+
 * Tue Apr 24 2018 Niels de Vos <ndevos@redhat.com> - 4.0.2-1
 - 4.0.2 GA
 
@@ -1474,6 +1487,9 @@ exit 0
 
 * Tue Feb 27 2018 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 4.0.0-0.1.rc1
 - 4.0.0 Release Candidate 1
+
+* Thu Feb 22 2018 Kotresh HR <khiremat@redhat.com>
+- Added util-linux as dependency to georeplication rpm (#1544382)
 
 * Thu Feb 1 2018 Niels de Vos <ndevos@redhat.com> - 4.0.0-0.1.rc0
 - 4.0.0 Release Candidate 0
