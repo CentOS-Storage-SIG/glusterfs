@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+# global prereltag rc0
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -449,6 +449,7 @@ BuildRequires:    python-ctypes
 %endif
 Requires:         python2-gluster = %{version}-%{release}
 Requires:         rsync
+Requires:         util-linux
 
 %description geo-replication
 GlusterFS is a distributed file-system capable of scaling to several
@@ -707,7 +708,6 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
-#%patch0001 -p1 -b.python-jwt
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1469,7 +1469,10 @@ exit 0
 %endif
 
 %changelog
-* Sat Jun 2 2018 Niels de Vos <ndevos@redhat.com> - 4.2.0-0.1.rc0
+* Tue Jun 12 2018 Niels de Vos <ndevos@redhat.com> - 4.1.0-1
+- 4.1.0 General Availability
+
+* Sat Jun 2 2018 Niels de Vos <ndevos@redhat.com> - 4.1.0-0.1.rc0
 - 4.1.0 Release Candidate 0
 
 * Tue Apr 24 2018 Niels de Vos <ndevos@redhat.com> - 4.0.2-1
