@@ -3,9 +3,9 @@ This is a dist-git like repo for [GlusterFS](https://github.com/gluster/glusterf
 The master brach is unused. Use an existing branch instead.
 Branch names follow convention like `sig-storage<VERSION>-gluster-<GLUSTERFS-VERSION>` as descibed on [Naming and Patterns for Mapping Git Branches to Koji Tags](https://wiki.centos.org/BrianStinson/GitBranchesandKojiTags)
 
-* sig-storage6-gluster-36: CentOS-6, glusterfs-3.6
-* sig-storage6-gluster-37: CentOS-6, glusterfs-3.7
-* sig-storage7-gluster-36: CentOS-7, glusterfs-3.6
+* sig-storage6-gluster-41: CentOS-6, glusterfs-4.1
+* sig-storage6-gluster-41: CentOS-6, glusterfs-4.1
+* sig-storage7-gluster-5: CentOS-7, glusterfs-5
 * ...
 
 Instructions for building the glusterfs package for the CentOS Storage SIG can be found in the following places:
