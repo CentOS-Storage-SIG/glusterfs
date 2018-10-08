@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -727,6 +727,12 @@ GlusterFS Events
 
 %prep
 %setup -q -n %{name}-%{version}%{?prereltag}
+%if ( ! %{_usepython3} )
+echo "fixing python shebangs..."
+for f in api events extras geo-replication libglusterfs tools xlators; do
+find $f -type f -exec sed -i 's|/usr/bin/python3|/usr/bin/python2|' {} \;
+done
+%endif
 
 %build
 %if ( 0%{?rhel} && 0%{?rhel} < 6 )
@@ -1509,7 +1515,8 @@ exit 0
 %endif
 
 %changelog
-
+* Mon Oct 8 2018 Niels de Vos <ndevos@redhat.com> - 5.0-0.1.rc1
+- 5.0 Release Candidate 1
 
 * Tue Sep 18 2018 Niels de Vos <ndevos@redhat.com> - 5.0-0.1.rc0
 - 5.0 Release Candidate 0
