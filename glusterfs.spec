@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc1
+#%%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -1517,6 +1517,9 @@ exit 0
 %endif
 
 %changelog
+* Fri Oct 19 2018 Niels de Vos <ndevos@redhat.com> - 5.0-1
+- 5.0 General Availability
+
 * Mon Oct 8 2018 Niels de Vos <ndevos@redhat.com> - 5.0-0.1.rc1
 - 5.0 Release Candidate 1
 
