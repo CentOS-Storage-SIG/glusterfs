@@ -23,8 +23,8 @@
 # rpmbuild -ta glusterfs-5.0rc0.tar.gz --without bd
 %{?_without_bd:%global _without_bd --disable-bd-xlator}
 
-%if ( 0%{?rhel} && 0%{?rhel} < 6 || 0%{?sles_version} )
-%global _without_bd --disable-bd-xlator
+%if ( 0%{?rhel} && 0%{?rhel} > 7 )
+%global _without_bd --without-bd
 %endif
 
 # cmocka
@@ -236,7 +236,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          5.0
+Version:          5.1
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -245,9 +245,9 @@ Release:          0.@PACKAGE_RELEASE@%{?dist}.3
 %endif
 License:          GPLv2 or LGPLv3+
 Group:            System Environment/Base
-URL:              http://gluster.readthedocs.io/en/latest/
+URL:              http://docs.gluster.org/
 %if ( 0%{_for_fedora_koji_builds} )
-Source0:          http://download.gluster.org/pub/gluster/%{name}/4.1/%{version}%{?prereltag}/%{name}-%{version}%{?prereltag}.tar.gz
+Source0:          http://download.gluster.org/pub/gluster/%{name}/5/%{version}%{?prereltag}/%{name}-%{version}%{?prereltag}.tar.gz
 Source1:          glusterd.sysconfig
 Source2:          glusterfsd.sysconfig
 Source7:          glusterfsd.service
@@ -282,7 +282,7 @@ BuildRequires:    python-ctypes
 %if ( 0%{?_with_ipv6default:1} ) || ( 0%{!?_without_libtirpc:1} )
 BuildRequires:    libtirpc-devel
 %endif
-%if ( 0%{?fedora} && 0%{?fedora} > 27 )
+%if ( 0%{?fedora} && 0%{?fedora} > 27 ) || ( 0%{?rhel} && 0%{?rhel} > 7 )
 BuildRequires:    rpcgen
 %endif
 BuildRequires:    userspace-rcu-devel >= 0.7
@@ -1403,7 +1403,9 @@ exit 0
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/server.so
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage
+%if ( 0%{!?_without_bd:1} )
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage/bd.so
+%endif
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage/posix.so
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/decompounder.so
@@ -1517,6 +1519,9 @@ exit 0
 %endif
 
 %changelog
+* Thu Nov 15 2018 Niels de Vos <ndevos@redhat.com> - 5.1-1
+- 5.1 GA
+
 * Fri Oct 19 2018 Niels de Vos <ndevos@redhat.com> - 5.0-1
 - 5.0 General Availability
 
