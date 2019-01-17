@@ -236,7 +236,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          5.2
+Version:          5.3
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1519,6 +1519,9 @@ exit 0
 %endif
 
 %changelog
+* Thu Jan 17 2019 Niels de Vos <ndevos@redhat.com> - 5.3-1
+- 5.3 GA
+
 * Thu Dec 13 2018 Niels de Vos <ndevos@redhat.com> - 5.2-1
 - 5.2 GA
 
