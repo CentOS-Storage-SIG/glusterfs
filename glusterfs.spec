@@ -237,7 +237,7 @@ Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
 Version:          5.3
-Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
+Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -319,6 +319,9 @@ Obsoletes:        %{name}-regression-tests
 %endif
 Obsoletes:        %{name}-ufo
 Obsoletes:        %{name}-ganesha
+%if ( 0%{!?_with_gnfs:1} )
+Obsoletes:        %{name}-gnfs
+%endif
 Provides:         %{name}-common = %{version}-%{release}
 Provides:         %{name}-core = %{version}-%{release}
 
@@ -1519,6 +1522,9 @@ exit 0
 %endif
 
 %changelog
+* Mon Feb 25 2019 Niels de Vos <ndevos@redhat.com> - 5.3-2
+- Obsoleting gluster-gnfs package (#1672711)
+
 * Thu Jan 17 2019 Niels de Vos <ndevos@redhat.com> - 5.3-1
 - 5.3 GA
 
