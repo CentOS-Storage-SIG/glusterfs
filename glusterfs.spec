@@ -236,8 +236,8 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          5.3
-Release:          %{?prereltag:0.}2%{?prereltag:.%{prereltag}}%{?dist}
+Version:          5.4
+Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
 Version:          @PACKAGE_VERSION@
@@ -1509,7 +1509,7 @@ exit 0
 %dir %{_sharedstatedir}/glusterd
 %dir %{_sharedstatedir}/glusterd/events
 %dir %{_libexecdir}/glusterfs
-     %{_libexecdir}/glusterfs/events
+     %{_libexecdir}/glusterfs/gfevents
      %{_libexecdir}/glusterfs/peer_eventsapi.py*
 %{_sbindir}/glustereventsd
 %{_sbindir}/gluster-eventsapi
@@ -1522,6 +1522,10 @@ exit 0
 %endif
 
 %changelog
+* Wed Feb 27 2019 Niels de Vos <ndevos@redhat.com> - 5.4-1
+- 5.4 GA
+- Renamed Python events package to gfevents
+
 * Mon Feb 25 2019 Niels de Vos <ndevos@redhat.com> - 5.3-2
 - Obsoleting gluster-gnfs package (#1672711)
 
