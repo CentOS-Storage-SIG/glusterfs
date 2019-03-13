@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -84,8 +84,8 @@
 # rpmbuild -ta glusterfs-5.0rc0.tar.gz --without rdma
 %{?_without_rdma:%global _without_rdma --disable-ibverbs}
 
-# No RDMA Support on s390(x)
-%ifarch s390 s390x armv7hl
+# No RDMA Support on 32-bit ARM
+%ifarch armv7hl
 %global _without_rdma --disable-ibverbs
 %endif
 
@@ -645,6 +645,18 @@ is in user space and easily manageable.
 This package provides the glusterfs server daemon.
 %endif
 
+%package thin-arbiter
+Summary:          GlusterFS thin-arbiter module
+Requires:         %{name}%{?_isa} = %{version}-%{release}
+Requires:         %{name}-server%{?_isa} = %{version}-%{release}
+
+%description thin-arbiter
+This package provides a tie-breaker functionality to GlusterFS
+replicate volume. It includes translators required to provide the
+functionality, and also few other scripts required for getting the setup done.
+
+This package provides the glusterfs thin-arbiter translator.
+
 %package client-xlators
 Summary:          GlusterFS client-side translators
 
@@ -986,6 +998,14 @@ fi
 exit 0
 %endif
 
+%preun thin-arbiter
+if [ $1 -eq 0 ]; then
+    if [ -f %glusterta_svcfile ]; then
+        %service_stop gluster-ta-volume
+        %systemd_preun gluster-ta-volume
+    fi
+fi
+
 ##-----------------------------------------------------------------------------
 ## All %%postun should be placed here and keep them sorted
 ##
@@ -1152,6 +1172,19 @@ exit 0
 %ghost      %attr(0600,-,-) %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
 %endif
 
+%files thin-arbiter
+%dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator
+%dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features
+     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/thin-arbiter.so
+%dir %{_datadir}/glusterfs/scripts
+     %{_datadir}/glusterfs/scripts/setup-thin-arbiter.sh
+%config %{_sysconfdir}/glusterfs/thin-arbiter.vol
+
+%if ( 0%{?_with_systemd:1} )
+%{_unitdir}/gluster-ta-volume.service
+%endif
+
+
 %if ( 0%{!?_without_georeplication:1} )
 %files geo-replication
 %config(noreplace) %{_sysconfdir}/logrotate.d/glusterfs-georep
@@ -1198,9 +1231,12 @@ exit 0
 # so that all other gluster submodules can reside in the same namespace.
 %if ( %{_usepython3} )
 %dir %{python3_sitelib}/gluster
+     %{python3_sitelib}/gluster/__init__.*
+     %{python3_sitelib}/gluster/__pycache__
      %{python3_sitelib}/gluster/cliutils
 %else
 %dir %{python2_sitelib}/gluster
+     %{python2_sitelib}/gluster/__init__.*
      %{python2_sitelib}/gluster/cliutils
 %endif
 
@@ -1229,6 +1265,7 @@ exit 0
 %doc extras/clear_xattrs.sh
 # sysconf
 %config(noreplace) %{_sysconfdir}/glusterfs
+%exclude %{_sysconfdir}/glusterfs/thin-arbiter.vol
 %exclude %{_sysconfdir}/glusterfs/eventsconfig.json
 %exclude %{_sharedstatedir}/glusterd/nfs/nfs-server.vol
 %exclude %{_sharedstatedir}/glusterd/nfs/run/nfs.pid
@@ -1265,7 +1302,6 @@ exit 0
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/arbiter.so
-     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/thin-arbiter.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bit-rot.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/bitrot-stub.so
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/features/sdfs.so
@@ -1385,7 +1421,7 @@ exit 0
 %dir %{_sharedstatedir}/glusterd
 %dir %{_sharedstatedir}/glusterd/events
 %dir %{_libexecdir}/glusterfs
-     %{_libexecdir}/glusterfs/events
+     %{_libexecdir}/glusterfs/gfevents
      %{_libexecdir}/glusterfs/peer_eventsapi.py*
 %{_sbindir}/glustereventsd
 %{_sbindir}/gluster-eventsapi
@@ -1398,6 +1434,10 @@ exit 0
 %endif
 
 %changelog
+* Wed Mar 13 2019 Niels de Vos <ndevos@redhat.com> - 6.0-0.1.rc1
+- 6.0 Release Candidate 1
+- s390x has RDMA, since around Fedora 27 and in RHEL7 since June 2016
+
 * Fri Feb 22 2019 Niels de Vos <ndevos@redhat.com> - 6.0-0.1.rc0
 - 6.0 Release Candidate 0
 - Install /var/lib/glusterd/groups/distributed-virt by default
