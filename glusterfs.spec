@@ -236,7 +236,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          5.4
+Version:          5.5
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1520,6 +1520,9 @@ exit 0
 %endif
 
 %changelog
+* Fri Mar 15 2019 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 5.5-1
+- 5.5 GA
+
 * Wed Feb 27 2019 Niels de Vos <ndevos@redhat.com> - 5.4-1
 - 5.4 GA
 - Renamed Python events package to gfevents
