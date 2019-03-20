@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc1
+# %%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -1434,6 +1434,9 @@ exit 0
 %endif
 
 %changelog
+* Wed Mar 20 2019 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 6.0-1
+- 6.0 GA
+
 * Wed Mar 13 2019 Niels de Vos <ndevos@redhat.com> - 6.0-0.1.rc1
 - 6.0 Release Candidate 1
 - s390x has RDMA, since around Fedora 27 and in RHEL7 since June 2016
