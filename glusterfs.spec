@@ -148,6 +148,7 @@
 %global _without_georeplication --disable-georeplication
 %global _with_gnfs %{nil}
 %global _without_tiering --disable-tiering
+%global _without_ocf --without-ocf
 %endif
 
 # From https://fedoraproject.org/wiki/Packaging:Python#Macros
@@ -218,7 +219,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          4.1.7
+Version:          4.1.8
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1360,7 +1361,9 @@ exit 0
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/server.so
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage
+%if ( 0%{!?_without_bd:1} )
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage/bd.so
+%endif
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage/posix.so
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/decompounder.so
@@ -1473,6 +1476,10 @@ exit 0
 %endif
 
 %changelog
+* Thu Mar 28 2019 Niels de Vos <ndevos@redhat.com> - 4.1.8-1
+- 4.1.8 GA
+- disabled bd xlator (#1648982)
+
 * Thu Jan 17 2019 Niels de Vos <ndevos@redhat.com> - 4.1.7-1
 - 4.1.7 GA
 
