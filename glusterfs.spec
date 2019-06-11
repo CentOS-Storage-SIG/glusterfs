@@ -219,7 +219,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          4.1.8
+Version:          4.1.9
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -1472,6 +1472,9 @@ exit 0
 %endif
 
 %changelog
+* Tue Jun 11 2019 Niels de Vos <ndevos@redhat.com> - 4.1.9-1
+- 4.1.9 GA
+
 * Thu Mar 28 2019 Niels de Vos <ndevos@redhat.com> - 4.1.8-1
 - 4.1.8 GA
 - disabled bd xlator (#1648982)
