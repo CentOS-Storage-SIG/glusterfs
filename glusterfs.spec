@@ -219,7 +219,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          4.1.9
+Version:          4.1.10
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -230,7 +230,7 @@ License:          GPLv2 or LGPLv3+
 Group:            System Environment/Base
 URL:              http://gluster.readthedocs.io/en/latest/
 %if ( 0%{_for_fedora_koji_builds} )
-Source0:          http://download.gluster.org/pub/gluster/%{name}/4.1/%{version}%{?prereltag}/%{name}-%{version}%{?prereltag}.tar.gz
+Source0:          https://download.gluster.org/pub/gluster/%{name}/4.1/%{version}%{?prereltag}/%{name}-%{version}%{?prereltag}.tar.gz
 Source1:          glusterd.sysconfig
 Source2:          glusterfsd.sysconfig
 Source7:          glusterfsd.service
@@ -1472,6 +1472,9 @@ exit 0
 %endif
 
 %changelog
+* Wed Jul 17 2019 Niels de Vos <ndevos@redhat.com> - 4.1.10-1
+- 4.1.10 GA
+
 * Tue Jun 11 2019 Niels de Vos <ndevos@redhat.com> - 4.1.9-1
 - 4.1.9 GA
 
