@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-# %%global prereltag rc1
+%global prereltag rc0
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -223,7 +223,7 @@
 Summary:          Distributed File System
 %if ( 0%{_for_fedora_koji_builds} )
 Name:             glusterfs
-Version:          6.5
+Version:          7.0
 Release:          %{?prereltag:0.}1%{?prereltag:.%{prereltag}}%{?dist}
 %else
 Name:             @PACKAGE_NAME@
@@ -351,7 +351,6 @@ is in user space and easily manageable.
 
 This package provides the api include files.
 
-%if ( 0%{!?_without_server:1} )
 %package cli
 Summary:          GlusterFS CLI
 Requires:         %{name}-libs = %{version}-%{release}
@@ -366,7 +365,6 @@ called Translators from GNU Hurd kernel. Much of the code in GlusterFS
 is in user space and easily manageable.
 
 This package provides the GlusterFS CLI application and its man page
-%endif
 
 %package cloudsync-plugins
 Summary:          Cloudsync Plugins
@@ -842,10 +840,8 @@ find ./tests ./run-tests.sh -type f | cpio -pd %{buildroot}%{_prefix}/share/glus
 %endif
 
 ## Install bash completion for cli
-%if ( 0%{!?_without_server:1} )
 install -p -m 0744 -D extras/command-completion/gluster.bash \
     %{buildroot}%{_sysconfdir}/bash_completion.d/gluster
-%endif
 
 %clean
 rm -rf %{buildroot}
@@ -1115,16 +1111,15 @@ exit 0
 %dir %{_includedir}/glusterfs/api
      %{_includedir}/glusterfs/api/*
 
-%if ( 0%{!?_without_server:1} )
 %files cli
 %{_sbindir}/gluster
 %{_mandir}/man8/gluster.8*
 %{_sysconfdir}/bash_completion.d/gluster
-%endif
 
 %files cloudsync-plugins
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/cloudsync-plugins
      %{_libdir}/glusterfs/%{version}%{?prereltag}/cloudsync-plugins/cloudsyncs3.so
+     %{_libdir}/glusterfs/%{version}%{?prereltag}/cloudsync-plugins/cloudsynccvlt.so
 
 %files devel
 %dir %{_includedir}/glusterfs
@@ -1321,8 +1316,6 @@ exit 0
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/protocol/server.so
 %dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage
      %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/storage/posix.so
-%dir %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance
-     %{_libdir}/glusterfs/%{version}%{?prereltag}/xlator/performance/decompounder.so
 
 # snap_scheduler
 %{_sbindir}/snap_scheduler.py
@@ -1435,6 +1428,10 @@ exit 0
 %endif
 
 %changelog
+* Wed Aug 28 2019 Niels de Vos <ndevos@redhat.com> - 7.0-0.1.rc0
+- GlusterFS 7.0 Release Candidate 0
+- always build glusterfs-cli to allow monitoring/managing from clients
+
 * Wed Aug 7 2019 Niels de Vos <ndevos@redhat.com> - 6.5-1
 - 6.5 GA
 
