@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc0
+%global prereltag rc1
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -177,6 +177,7 @@
 # can't seem to make a generic macro that works
 %global glusterd_svcfile   %{_unitdir}/glusterd.service
 %global glusterfsd_svcfile %{_unitdir}/glusterfsd.service
+%global glusterta_svcfile %{_unitdir}/gluster-ta-volume.service
 %global glustereventsd_svcfile %{_unitdir}/glustereventsd.service
 %global glusterfssharedstorage_svcfile %{_unitdir}/glusterfssharedstorage.service
 %else
@@ -351,7 +352,6 @@ is in user space and easily manageable.
 
 This package provides the api include files.
 
-%if ( 0%{!?_without_server:1} )
 %package cli
 Summary:          GlusterFS CLI
 Requires:         %{name}-libs = %{version}-%{release}
@@ -366,7 +366,6 @@ called Translators from GNU Hurd kernel. Much of the code in GlusterFS
 is in user space and easily manageable.
 
 This package provides the GlusterFS CLI application and its man page
-%endif
 
 %package cloudsync-plugins
 Summary:          Cloudsync Plugins
@@ -1430,6 +1429,9 @@ exit 0
 %endif
 
 %changelog
+* Mon Sep 16 2019 Niels de Vos <ndevos@redhat.com> - 7.0-0.1.rc1
+- GlusterFS 7.0 Release Candidate 1
+
 * Wed Aug 28 2019 Niels de Vos <ndevos@redhat.com> - 7.0-0.1.rc0
 - GlusterFS 7.0 Release Candidate 0
 - always build glusterfs-cli to allow monitoring/managing from clients
