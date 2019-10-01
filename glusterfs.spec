@@ -3,7 +3,7 @@
 %global _for_fedora_koji_builds 1
 
 # uncomment and add '%' to use the prereltag for pre-releases
-%global prereltag rc1
+%global prereltag rc3
 
 ##-----------------------------------------------------------------------------
 ## All argument definitions should be placed here and keep them sorted
@@ -1429,6 +1429,10 @@ exit 0
 %endif
 
 %changelog
+* Tue Oct 1 2019 Kaleb S. KEITHLEY <kkeithle[at]redhat.com> - 7.0-0.1.rc3
+- GlusterFS 7.0 Release Candidate 3
+- Note: RC2 was tagged but not released
+
 * Mon Sep 16 2019 Niels de Vos <ndevos@redhat.com> - 7.0-0.1.rc1
 - GlusterFS 7.0 Release Candidate 1
 
