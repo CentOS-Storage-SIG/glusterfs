@@ -18,15 +18,6 @@
 %global _with_asan %{nil}
 %endif
 
-# bd
-# if you wish to compile an rpm without the BD map support...
-# rpmbuild -ta glusterfs-5.0rc0.tar.gz --without bd
-%{?_without_bd:%global _without_bd --disable-bd-xlator}
-
-%if ( 0%{?rhel} && 0%{?rhel} > 7 )
-%global _without_bd --without-bd
-%endif
-
 # cmocka
 # if you wish to compile an rpm with cmocka unit testing...
 # rpmbuild -ta glusterfs-5.0rc0.tar.gz --with cmocka
@@ -1435,6 +1426,9 @@ exit 0
 %endif
 
 %changelog
+* Thu Oct 10 2019 Kaleb S. KEITHLEY <kkeithle[at]redhat.com>
+- xlators/storage/bd  was removed in glusterfs-6
+
 * Wed Aug 7 2019 Niels de Vos <ndevos@redhat.com> - 6.5-1
 - 6.5 GA
 
